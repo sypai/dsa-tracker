@@ -90,7 +90,7 @@
   .streak-inline-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
   .cal-legend { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 10px; }
   .cal-legend-swatch { width: 11px; height: 11px; flex-shrink: 0; }
-  .cal-grid { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(auto-fill, 13px); gap: 3px; margin-top: 8px; }
   .cal-day { width: 13px; height: 13px; background: var(--cal-0); flex-shrink: 0; transition: opacity 0.1s; cursor: default; }
   .cal-day.l1 { background: var(--cal-1); }
   .cal-day.l2 { background: var(--cal-2); }
@@ -269,7 +269,7 @@
 <!-- ACTIVITY -->
 <div class="activity-block">
   <div class="activity-header">
-    <div class="section-title" style="border:none;padding:0;margin:0">Activity — last 60 days</div>
+    <div class="section-title" style="border:none;padding:0;margin:0">Activity — last 120 days</div>
     <div class="streak-inline">
       <span class="streak-inline-num" id="streakNum">0</span>
       <span class="streak-inline-label">day streak</span>
@@ -383,7 +383,8 @@ let pendingDeleteId = null;
 
 function save()       { localStorage.setItem('dsa_elo_v2', JSON.stringify(questions)); }
 function saveTopics() { localStorage.setItem('dsa_topics', JSON.stringify(customTopics)); }
-function today()      { return new Date().toISOString().slice(0,10); }
+function today()      { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dateKey(d)    { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
 function getStreak() {
   if (!questions.length) return 0;
@@ -391,7 +392,7 @@ function getStreak() {
   let streak = 0;
   const d = new Date(); d.setHours(0,0,0,0);
   while (true) {
-    const key = d.toISOString().slice(0,10);
+    const key = dateKey(d);
     if (days.has(key)) { streak++; d.setDate(d.getDate()-1); }
     else if (streak === 0) { d.setDate(d.getDate()-1); if (new Date()-d > 2*86400000) break; }
     else break;
@@ -403,18 +404,18 @@ function computeElo() {
   if (!questions.length) return { elo:ELO_BASE, gained:0, lost:0, decayActive:false, gapDays:0, pendingDecay:0 };
   const gained = questions.reduce((s,q) => s + ELO_GAIN[q.diff], 0);
   const sorted = [...questions].sort((a,b)=>a.date.localeCompare(b.date));
-  const firstDate = new Date(sorted[0].date); firstDate.setHours(0,0,0,0);
+  const [fy,fm,fd] = sorted[0].date.split('-').map(Number); const firstDate = new Date(fy,fm-1,fd);
   const todayD = new Date(); todayD.setHours(0,0,0,0);
   const solvedDays = new Set(questions.map(q=>q.date));
   let missedDays = 0;
   const d = new Date(firstDate); d.setDate(d.getDate()+1);
   while (d <= todayD) {
-    if (!solvedDays.has(d.toISOString().slice(0,10))) missedDays++;
+    if (!solvedDays.has(dateKey(d))) missedDays++;
     d.setDate(d.getDate()+1);
   }
   const lost = missedDays * DECAY;
   const elo = ELO_BASE + gained - lost;
-  const lastDate = new Date(sorted[sorted.length-1].date); lastDate.setHours(0,0,0,0);
+  const [ly,lm,ld] = sorted[sorted.length-1].date.split('-').map(Number); const lastDate = new Date(ly,lm-1,ld);
   const gapDays = Math.round((todayD - lastDate) / 86400000);
   const decayActive = gapDays > 1;
   const pendingDecay = decayActive ? (gapDays - 1) * DECAY : 0;
@@ -467,14 +468,14 @@ function updatePreview() {
 function buildCalendar() {
   const grid = document.getElementById('calGrid'); grid.innerHTML='';
   const todayD = new Date(); todayD.setHours(0,0,0,0);
-  const firstDate = questions.length ? new Date([...questions].sort((a,b)=>a.date.localeCompare(b.date))[0].date) : null;
-  firstDate && firstDate.setHours(0,0,0,0);
+  const _fd = questions.length ? [...questions].sort((a,b)=>a.date.localeCompare(b.date))[0].date : null;
+  const firstDate = _fd ? (([y,m,d])=>new Date(y,m-1,d))(_fd.split('-').map(Number)) : null;
   // Count solves per day
   const countMap = {};
   questions.forEach(q => { countMap[q.date] = (countMap[q.date]||0)+1; });
-  for (let i=59; i>=0; i--) {
+  for (let i=119; i>=0; i--) {
     const d = new Date(todayD); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
+    const key = dateKey(d);
     const n = countMap[key]||0;
     const isDecay = firstDate && d > firstDate && !countMap[key] && d < todayD;
     let lvl = '';
