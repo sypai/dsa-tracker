@@ -38,7 +38,7 @@
   .logo { font-family: var(--font-display); font-size: 3rem; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
   .logo span { color: var(--accent); }
   .tagline { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
-  .theme-toggle { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap;}
+  .theme-toggle { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
   .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
 
   /* ── TOP PANEL ── */
@@ -179,7 +179,7 @@
   .expand-date { font-family: var(--font-mono); font-size: 11px; color: var(--muted2); }
 
   /* ── CONFIRM MODAL ── */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);  display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.15s ease; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.15s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .modal { background: var(--surface); border: 1px solid var(--border2); padding: 2rem; max-width: 380px; width: 90%; }
   .modal-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--text); letter-spacing: 0.05em; margin-bottom: 8px; }
@@ -198,7 +198,7 @@
 
 
   /* ── HEADER RIGHT ── */
-  .header-right { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
 
   /* ── ACCOUNT MENU ── */
   .acct-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; position: relative; }
@@ -214,8 +214,7 @@
   .acct-user { padding: 10px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--muted2); border-bottom: 1px solid var(--border); letter-spacing: 0.04em; }
 
   /* ── AUTH MODAL ── */
-
-  .auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px);d isplay: flex; align-items: center; justify-content: center; z-index: 400; animation: fadeIn 0.15s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.1);}
+  .auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); align-items: center; justify-content: center; z-index: 400; animation: fadeIn 0.15s ease; }
   .auth-modal { background: var(--surface); border: 1px solid var(--border2); padding: 2rem; width: 360px; max-width: 94vw; position: relative; }
   .auth-modal::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
   .auth-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--text); letter-spacing: 0.05em; margin-bottom: 4px; }
@@ -234,6 +233,48 @@
   .auth-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; line-height: 1; }
   .auth-close:hover { color: var(--text); }
 
+
+  /* ── LANDING PAGE ── */
+  #landingPage { display: none; min-height: 100vh; min-height: 100dvh; max-width: 1020px; margin: 0 auto; padding: 0 1.5rem; flex-direction: column; }
+  #dashboardPage { display: none; }
+
+  /* nav */
+  .landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.8rem 0 1.2rem; border-bottom: 1px solid var(--border); }
+  .landing-nav-right { display: flex; gap: 8px; align-items: stretch; }
+  /* unified nav button size */
+  .landing-nav-right .theme-toggle,
+  .landing-nav-right .ln-signin { height: 34px; padding: 0 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border2); background: none; color: var(--muted); transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+  .landing-nav-right .theme-toggle:hover,
+  .landing-nav-right .ln-signin:hover { border-color: var(--accent); color: var(--text); }
+  /* remove the margin that was on .theme-toggle globally */
+  .landing-nav-right .theme-toggle { margin-top: 0; }
+
+  /* body */
+  .landing-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: clamp(3rem, 8vh, 6rem) 0 clamp(2rem, 5vh, 4rem); }
+  .landing-eyebrow { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 1.2rem; }
+  .landing-headline { font-family: var(--font-display); font-size: clamp(3rem, 8.5vw, 6.2rem); line-height: 0.95; color: var(--text); letter-spacing: 0.02em; margin-bottom: 1.6rem; max-width: 720px; }
+  .landing-headline em { color: var(--accent); font-style: normal; }
+  .landing-sub { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0.04em; line-height: 1.9; margin-bottom: 2.4rem; max-width: 400px; }
+
+  /* CTA row — both buttons same height */
+  .landing-cta-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+  .landing-cta,
+  .landing-cta-secondary { height: 46px; padding: 0 32px; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; white-space: nowrap; display: inline-flex; align-items: center; }
+  .landing-cta { background: var(--accent); border: 1px solid var(--accent); color: #f5f0e8; font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 0.12em; }
+  .landing-cta:hover { background: #991f15; border-color: #991f15; }
+  .landing-cta-secondary { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .landing-cta-secondary:hover { border-color: var(--accent); color: var(--text); }
+
+  /* footer */
+  .landing-footer { padding: 1.4rem 0; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; color: var(--muted2); letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; }
+  .landing-footer-links { display: flex; gap: 20px; }
+
+  @media (max-width: 500px) {
+    .landing-features { grid-template-columns: repeat(2, 1fr); }
+    .landing-cta-row { flex-direction: column; }
+    .landing-cta, .landing-cta-secondary { width: 100%; justify-content: center; }
+  }
+
   @media (max-width: 700px) {
     .top-panel { grid-template-columns: 1fr; }
     .add-row { grid-template-columns: 1fr 1fr; }
@@ -247,6 +288,43 @@
 </head>
 <body>
 
+<!-- LANDING PAGE -->
+<div id="landingPage">
+  <nav class="landing-nav">
+    <div>
+      <div class="logo">DSA<span>.</span>LOG</div>
+      <div class="tagline">elo engine · time decay · grind or bleed</div>
+    </div>
+    <div class="landing-nav-right">
+      <button class="theme-toggle" id="themeToggleLanding" onclick="toggleTheme()">○ Light</button>
+      <button class="ln-signin" onclick="openAuth('signin')">Sign in</button>
+    </div>
+  </nav>
+
+  <div class="landing-body">
+    <div class="landing-eyebrow">DSA Tracker — ELO Engine</div>
+    <div class="landing-headline">Grind daily.<br>Or watch your <em>rating bleed.</em></div>
+    <div class="landing-sub">
+      Every problem solved moves you up the ranks.<br>
+      Every day you skip? −2 ELO. No warnings.
+    </div>
+    <div class="landing-cta-row">
+      <button class="landing-cta" onclick="openAuth('signup')">Start Grinding</button>
+      <button class="landing-cta-secondary" onclick="openAuth('signin')">Sign in</button>
+    </div>
+  </div>
+
+  <div class="landing-footer">
+    <span>© DSA.LOG — built for grinders</span>
+    <div class="landing-footer-links">
+      <span style="cursor:pointer;color:var(--muted)" onclick="openAuth('signup')">Create account</span>
+      <span style="cursor:pointer;color:var(--muted)" onclick="openAuth('signin')">Sign in</span>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardPage">
 <!-- HEADER -->
 <div class="header">
   <div>
@@ -379,7 +457,7 @@
         <option value="medium" selected>Medium</option>
         <option value="hard">Hard</option>
       </select>
-      <select id="qTopic"></select>
+      <select id="qTopic" id="qTopic"></select>
       <select id="qSource">
         <option value="LC">LeetCode</option>
         <option value="AE">AlgoExpert</option>
@@ -407,32 +485,6 @@
   <span>Question</span><span>ELO</span><span>Source</span><span>Topic</span><span></span>
 </div>
 <div class="q-list" id="qList"></div>
-
-<!-- AUTH MODAL -->
-<div class="auth-overlay" id="authOverlay" style="display:none" onclick="if(event.target===this)closeAuth()">
-  <div class="auth-modal">
-    <button class="auth-close" onclick="closeAuth()">×</button>
-    <div class="auth-title" id="authTitle">Sign In</div>
-    <div class="auth-sub" id="authSub">Welcome back. Pick up where you left off.</div>
-    <div class="auth-field">
-      <label>Email</label>
-      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
-    </div>
-    <div class="auth-field" id="authNameField" style="display:none">
-      <label>Name</label>
-      <input type="text" id="authName" placeholder="Your name" autocomplete="name" />
-    </div>
-    <div class="auth-field">
-      <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <div class="auth-error" id="authError"></div>
-    <button class="auth-submit" id="authSubmit" onclick="submitAuth()">SIGN IN</button>
-    <div class="auth-switch" id="authSwitch">
-      No account? <a onclick="switchAuthMode()">Create one</a>
-    </div>
-  </div>
-</div>
 
 <!-- DELETE MODAL -->
 <div class="modal-overlay" id="deleteModal" style="display:none" onclick="if(event.target===this)closeModal()">
@@ -768,6 +820,7 @@ let authMode = 'signin';
 
 function updateAcctUI() {
   const btn = document.getElementById('acctBtn');
+  if (!btn) return;
   if (currentUser) {
     btn.textContent = '⊙ ' + (currentUser.name || currentUser.email.split('@')[0]);
     btn.classList.add('signed-in');
@@ -842,6 +895,7 @@ function submitAuth() {
   localStorage.setItem('dsa_user', JSON.stringify(currentUser));
   updateAcctUI();
   closeAuth();
+  showDashboard();
 }
 
 function signOut() {
@@ -849,27 +903,79 @@ function signOut() {
   localStorage.removeItem('dsa_user');
   document.getElementById('acctDropdown').classList.remove('open');
   updateAcctUI();
+  showLanding();
 }
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('authOverlay').style.display !== 'none') submitAuth();
 });
 
-updateAcctUI();
 
+function showLanding() {
+  document.getElementById('landingPage').style.display    = 'flex';
+  document.getElementById('dashboardPage').style.display = 'none';
+  ECG.stop();
+}
+function showDashboard() {
+  document.getElementById('landingPage').style.display    = 'none';
+  document.getElementById('dashboardPage').style.display = 'block';
+  render();
+  const qn = document.getElementById('qName');
+  if (qn && !qn._hasListener) {
+    qn.addEventListener('keydown', e=>{ if(e.key==='Enter') addQuestion(); });
+    qn._hasListener = true;
+  }
+  updateAcctUI();
+}
 
 function toggleTheme() {
   const isDark = document.documentElement.classList.toggle('dark');
   localStorage.setItem('dsa_theme', isDark ? 'dark' : 'light');
-  document.getElementById('themeToggle').textContent = isDark ? '● Dark' : '○ Light';
+  const label = isDark ? '● Dark' : '○ Light';
+  const t1 = document.getElementById('themeToggle');
+  const t2 = document.getElementById('themeToggleLanding');
+  if (t1) t1.textContent = label;
+  if (t2) t2.textContent = label;
 }
 if (localStorage.getItem('dsa_theme') === 'dark') {
   document.documentElement.classList.add('dark');
-  document.getElementById('themeToggle').textContent = '● Dark';
+  const label = '● Dark';
+  const t1 = document.getElementById('themeToggle');
+  const t2 = document.getElementById('themeToggleLanding');
+  if (t1) t1.textContent = label;
+  if (t2) t2.textContent = label;
 }
 
-document.getElementById('qName').addEventListener('keydown', e=>{ if(e.key==='Enter') addQuestion(); });
-render();
+updateAcctUI();
+
+if (currentUser) { showDashboard(); } else { showLanding(); }
 </script>
+</div><!-- /dashboardPage -->
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" style="display:none" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuth()">×</button>
+    <div class="auth-title" id="authTitle">Sign In</div>
+    <div class="auth-sub" id="authSub">Welcome back. Pick up where you left off.</div>
+    <div class="auth-field">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="auth-field" id="authNameField" style="display:none">
+      <label>Name</label>
+      <input type="text" id="authName" placeholder="Your name" autocomplete="name" />
+    </div>
+    <div class="auth-field">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <button class="auth-submit" id="authSubmit" onclick="submitAuth()">SIGN IN</button>
+    <div class="auth-switch" id="authSwitch">
+      No account? <a onclick="switchAuthMode()">Create one</a>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
