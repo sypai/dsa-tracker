@@ -38,7 +38,7 @@
   .logo { font-family: var(--font-display); font-size: 3rem; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
   .logo span { color: var(--accent); }
   .tagline { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
-  .theme-toggle { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; margin-top: 6px; }
+  .theme-toggle { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap;}
   .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
 
   /* ── TOP PANEL ── */
@@ -85,9 +85,14 @@
   /* ── ACTIVITY ── */
   .activity-block { background: var(--surface); border: 1px solid var(--border); padding: 1rem 1.2rem; margin-bottom: 2rem; }
   .activity-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .streak-inline { text-align: right; }
-  .streak-inline-num { font-family: var(--font-display); font-size: 2rem; color: var(--accent); line-height: 1; display: block; }
+  .streak-inline-num { font-family: var(--font-display); font-size: 2rem; color: var(--accent); line-height: 1; }
   .streak-inline-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  /* ── ECG ── */
+  .streak-inline { text-align: right; display: flex; align-items: center; gap: 10px; }
+  .ecg-wrap { position: relative; width: 60px; height: 22px; opacity: 0.7; }
+  #ecgCanvas { display: block; }
+  .streak-nums-row { display: flex; align-items: baseline; gap: 5px; }
+
   .cal-legend { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 10px; }
   .cal-legend-swatch { width: 11px; height: 11px; flex-shrink: 0; }
   .cal-grid { display: grid; grid-template-columns: repeat(auto-fill, 13px); gap: 3px; margin-top: 8px; }
@@ -174,7 +179,7 @@
   .expand-date { font-family: var(--font-mono); font-size: 11px; color: var(--muted2); }
 
   /* ── CONFIRM MODAL ── */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.15s ease; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);  display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.15s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .modal { background: var(--surface); border: 1px solid var(--border2); padding: 2rem; max-width: 380px; width: 90%; }
   .modal-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--text); letter-spacing: 0.05em; margin-bottom: 8px; }
@@ -190,6 +195,44 @@
   .empty-big { font-family: var(--font-display); font-size: 2.5rem; color: var(--border2); display: block; margin-bottom: 8px; }
 
   ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+
+  /* ── HEADER RIGHT ── */
+  .header-right { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+
+  /* ── ACCOUNT MENU ── */
+  .acct-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; position: relative; }
+  .acct-btn:hover { border-color: var(--accent); color: var(--text); }
+  .acct-btn.signed-in { border-color: var(--easy); color: var(--easy); }
+  .acct-dropdown { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface); border: 1px solid var(--border2); min-width: 180px; z-index: 300; }
+  .acct-btn:focus-within .acct-dropdown,
+  .acct-dropdown.open { display: block; }
+  .acct-dropdown-item { display: block; width: 100%; background: none; border: none; text-align: left; font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding: 10px 14px; cursor: pointer; transition: background 0.1s, color 0.1s; }
+  .acct-dropdown-item:hover { background: var(--surface2); color: var(--text); }
+  .acct-dropdown-item.danger:hover { color: var(--accent); }
+  .acct-dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+  .acct-user { padding: 10px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--muted2); border-bottom: 1px solid var(--border); letter-spacing: 0.04em; }
+
+  /* ── AUTH MODAL ── */
+
+  .auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px);d isplay: flex; align-items: center; justify-content: center; z-index: 400; animation: fadeIn 0.15s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.1);}
+  .auth-modal { background: var(--surface); border: 1px solid var(--border2); padding: 2rem; width: 360px; max-width: 94vw; position: relative; }
+  .auth-modal::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
+  .auth-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--text); letter-spacing: 0.05em; margin-bottom: 4px; }
+  .auth-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 1.5rem; letter-spacing: 0.04em; }
+  .auth-field { margin-bottom: 10px; }
+  .auth-field label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); margin-bottom: 5px; }
+  .auth-field input { width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 9px 11px; outline: none; transition: border-color 0.15s; }
+  .auth-field input:focus { border-color: var(--accent); }
+  .auth-field input::placeholder { color: var(--muted2); }
+  .auth-submit { width: 100%; background: var(--accent); border: none; color: #f5f0e8; font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.1em; padding: 11px; cursor: pointer; margin-top: 6px; transition: background 0.15s; }
+  .auth-submit:hover { background: #991f15; }
+  .auth-switch { text-align: center; margin-top: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .auth-switch a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .auth-switch a:hover { text-decoration: underline; }
+  .auth-error { font-family: var(--font-mono); font-size: 11px; color: var(--accent); margin-top: 8px; min-height: 16px; }
+  .auth-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; line-height: 1; }
+  .auth-close:hover { color: var(--text); }
 
   @media (max-width: 700px) {
     .top-panel { grid-template-columns: 1fr; }
@@ -210,7 +253,22 @@
     <div class="logo">DSA<span>.</span>LOG</div>
     <div class="tagline">elo engine · time decay · grind or bleed</div>
   </div>
-  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">○ Light</button>
+  <div class="header-right">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">○ Light</button>
+    <div style="position:relative">
+      <button class="acct-btn" id="acctBtn" onclick="toggleAcctMenu()">⊙ Account</button>
+      <div class="acct-dropdown" id="acctDropdown">
+        <div id="acctGuestView">
+          <button class="acct-dropdown-item" onclick="openAuth('signin')">Sign in</button>
+          <button class="acct-dropdown-item" onclick="openAuth('signup')">Create account</button>
+        </div>
+        <div id="acctUserView" style="display:none">
+          <div class="acct-user" id="acctUserLabel"></div>
+          <button class="acct-dropdown-item danger" onclick="signOut()">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- TOP PANEL -->
@@ -271,8 +329,13 @@
   <div class="activity-header">
     <div class="section-title" style="border:none;padding:0;margin:0">Activity — last 120 days</div>
     <div class="streak-inline">
-      <span class="streak-inline-num" id="streakNum">0</span>
-      <span class="streak-inline-label">day streak</span>
+      <div class="streak-nums-row">
+        <span class="streak-inline-num" id="streakNum">0</span>
+        <span class="streak-inline-label">day streak</span>
+      </div>
+      <div class="ecg-wrap">
+        <canvas id="ecgCanvas" width="60" height="22"></canvas>
+      </div>
     </div>
   </div>
   <div style="height:1px;background:var(--border);margin-bottom:10px"></div>
@@ -316,7 +379,7 @@
         <option value="medium" selected>Medium</option>
         <option value="hard">Hard</option>
       </select>
-      <select id="qTopic" id="qTopic"></select>
+      <select id="qTopic"></select>
       <select id="qSource">
         <option value="LC">LeetCode</option>
         <option value="AE">AlgoExpert</option>
@@ -344,6 +407,32 @@
   <span>Question</span><span>ELO</span><span>Source</span><span>Topic</span><span></span>
 </div>
 <div class="q-list" id="qList"></div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" style="display:none" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuth()">×</button>
+    <div class="auth-title" id="authTitle">Sign In</div>
+    <div class="auth-sub" id="authSub">Welcome back. Pick up where you left off.</div>
+    <div class="auth-field">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="auth-field" id="authNameField" style="display:none">
+      <label>Name</label>
+      <input type="text" id="authName" placeholder="Your name" autocomplete="name" />
+    </div>
+    <div class="auth-field">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <button class="auth-submit" id="authSubmit" onclick="submitAuth()">SIGN IN</button>
+    <div class="auth-switch" id="authSwitch">
+      No account? <a onclick="switchAuthMode()">Create one</a>
+    </div>
+  </div>
+</div>
 
 <!-- DELETE MODAL -->
 <div class="modal-overlay" id="deleteModal" style="display:none" onclick="if(event.target===this)closeModal()">
@@ -610,7 +699,164 @@ function addQuestion() {
   setTimeout(()=>{ bar.style.transition='width 0.8s cubic-bezier(0.16,1,0.3,1)'; bar.style.opacity='1'; }, 60);
 }
 
-function render() { updateStats(); buildCalendar(); buildTopics(); buildTopicSelect(); buildList(); }
+function render() { updateStats(); buildCalendar(); buildTopics(); buildTopicSelect(); buildList(); ECG.start(); }
+
+// ── ECG ENGINE ──
+const ECG = (() => {
+  let raf = null, offset = 0;
+  const W = 60, H = 22;
+  const beat = [
+    [0, .5],[.15,.5],[.22,.44],[.28,.56],[.33,.5],
+    [.36,.5],[.40,.05],[.44,.95],[.48,.5],
+    [.52,.38],[.58,.62],[.63,.5],[1,.5]
+  ];
+  function state() {
+    const streak = parseInt(document.getElementById('streakNum').textContent)||0;
+    const elo    = parseInt(document.getElementById('eloDisplay').textContent)||0;
+    const bleeding = document.getElementById('eloDisplay').classList.contains('bleeding');
+    if (elo <= 0 && !document.querySelector('.q-item')) return 'dead';
+    if (bleeding) return 'decay';
+    if (streak > 0) return 'alive';
+    return 'idle';
+  }
+  function color(s) {
+    const st = getComputedStyle(document.documentElement);
+    if (s==='alive') return st.getPropertyValue('--easy').trim();
+    if (s==='decay') return st.getPropertyValue('--medium').trim();
+    return st.getPropertyValue('--muted2').trim();
+  }
+  function draw() {
+    const canvas = document.getElementById('ecgCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const s = state();
+    const spd = s==='alive' ? 1.0 : s==='decay' ? 0.35 : s==='idle' ? 0.18 : 0;
+    ctx.clearRect(0,0,W,H);
+    if (s==='dead') {
+      ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2);
+      ctx.strokeStyle=color(s); ctx.lineWidth=1; ctx.globalAlpha=0.3; ctx.stroke(); ctx.globalAlpha=1;
+      raf=requestAnimationFrame(draw); return;
+    }
+    const cw = W * 0.85;
+    ctx.beginPath(); ctx.strokeStyle=color(s); ctx.lineWidth=1.2;
+    let first=true;
+    for (let c=-1; c<3; c++) {
+      const sx = c*cw - (offset%cw);
+      beat.forEach(([bx,by]) => {
+        const px=sx+bx*cw, py=by*H;
+        if (first){ctx.moveTo(px,py);first=false;} else ctx.lineTo(px,py);
+      });
+    }
+    ctx.stroke();
+    // fade left edge
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+    const g=ctx.createLinearGradient(0,0,W*0.3,0);
+    g.addColorStop(0,bg); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W*0.3,H);
+    offset+=spd;
+    raf=requestAnimationFrame(draw);
+  }
+  return {
+    start(){ if(raf) cancelAnimationFrame(raf); offset=0; draw(); },
+    stop(){  if(raf) cancelAnimationFrame(raf); raf=null; }
+  };
+})();
+
+// ── AUTH ──
+let currentUser = JSON.parse(localStorage.getItem('dsa_user') || 'null');
+let authMode = 'signin';
+
+function updateAcctUI() {
+  const btn = document.getElementById('acctBtn');
+  if (currentUser) {
+    btn.textContent = '⊙ ' + (currentUser.name || currentUser.email.split('@')[0]);
+    btn.classList.add('signed-in');
+    document.getElementById('acctGuestView').style.display = 'none';
+    document.getElementById('acctUserView').style.display  = 'block';
+    document.getElementById('acctUserLabel').textContent   = currentUser.email;
+  } else {
+    btn.textContent = '⊙ Account';
+    btn.classList.remove('signed-in');
+    document.getElementById('acctGuestView').style.display = 'block';
+    document.getElementById('acctUserView').style.display  = 'none';
+  }
+}
+
+function toggleAcctMenu() {
+  document.getElementById('acctDropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('acctBtn')?.closest('div[style]');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('acctDropdown').classList.remove('open');
+  }
+});
+
+function openAuth(mode) {
+  authMode = mode;
+  document.getElementById('acctDropdown').classList.remove('open');
+  document.getElementById('authOverlay').style.display = 'flex';
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authName').value = '';
+  setAuthMode(mode);
+  setTimeout(()=>document.getElementById('authEmail').focus(), 60);
+}
+function closeAuth() { document.getElementById('authOverlay').style.display = 'none'; }
+function setAuthMode(mode) {
+  authMode = mode;
+  const isSignup = mode === 'signup';
+  document.getElementById('authTitle').textContent   = isSignup ? 'Create Account' : 'Sign In';
+  document.getElementById('authSub').textContent     = isSignup ? 'Start tracking your grind.' : 'Welcome back. Pick up where you left off.';
+  document.getElementById('authSubmit').textContent  = isSignup ? 'CREATE ACCOUNT' : 'SIGN IN';
+  document.getElementById('authNameField').style.display = isSignup ? 'block' : 'none';
+  document.getElementById('authSwitch').innerHTML    = isSignup
+    ? 'Already have one? <a onclick="switchAuthMode()">Sign in</a>'
+    : 'No account? <a onclick="switchAuthMode()">Create one</a>';
+  document.getElementById('authError').textContent = '';
+}
+function switchAuthMode() { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); }
+
+function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass  = document.getElementById('authPassword').value;
+  const name  = document.getElementById('authName').value.trim();
+  const err   = document.getElementById('authError');
+  if (!email || !pass) { err.textContent = 'Email and password required.'; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Enter a valid email.'; return; }
+  if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
+  if (authMode === 'signup') {
+    const existing = JSON.parse(localStorage.getItem('dsa_accounts') || '{}');
+    if (existing[email]) { err.textContent = 'An account with this email already exists.'; return; }
+    const user = { email, name: name || email.split('@')[0], createdAt: new Date().toISOString() };
+    existing[email] = { ...user, pass };
+    localStorage.setItem('dsa_accounts', JSON.stringify(existing));
+    currentUser = user;
+  } else {
+    const existing = JSON.parse(localStorage.getItem('dsa_accounts') || '{}');
+    const acct = existing[email];
+    if (!acct || acct.pass !== pass) { err.textContent = 'Incorrect email or password.'; return; }
+    currentUser = { email: acct.email, name: acct.name };
+  }
+  localStorage.setItem('dsa_user', JSON.stringify(currentUser));
+  updateAcctUI();
+  closeAuth();
+}
+
+function signOut() {
+  currentUser = null;
+  localStorage.removeItem('dsa_user');
+  document.getElementById('acctDropdown').classList.remove('open');
+  updateAcctUI();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('authOverlay').style.display !== 'none') submitAuth();
+});
+
+updateAcctUI();
+
 
 function toggleTheme() {
   const isDark = document.documentElement.classList.toggle('dark');
