@@ -174,6 +174,18 @@
   .expand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .expand-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted2); margin-bottom: 6px; }
   .expand-notes { font-size: 13px; color: var(--muted); line-height: 1.7; white-space: pre-wrap; }
+
+  /* ── MULTI-LINK ── */
+  .link-list { display: flex; flex-direction: column; gap: 5px; }
+  .link-row { display: flex; gap: 5px; align-items: center; }
+  .link-row input { flex: 1; background: var(--bg); border: 1px solid var(--border2); color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 9px 11px; outline: none; transition: border-color 0.15s; }
+  .link-row input:focus { border-color: var(--accent); }
+  .link-row input::placeholder { color: var(--muted); }
+  .link-remove { background: none; border: 1px solid var(--border2); color: var(--muted2); font-size: 15px; width: 32px; height: 36px; cursor: pointer; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .link-remove:hover { border-color: var(--accent); color: var(--accent); }
+  .link-add-inline { background: none; border: 1px solid var(--border2); color: var(--muted2); font-size: 14px; width: 32px; height: 36px; cursor: pointer; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .link-add-inline:hover { border-color: var(--accent); color: var(--accent); }
+  .expand-links { display: flex; flex-direction: column; gap: 5px; }
   .expand-link { font-family: var(--font-mono); font-size: 12px; color: var(--accent); text-decoration: none; word-break: break-all; }
   .expand-link:hover { text-decoration: underline; }
   .expand-date { font-family: var(--font-mono); font-size: 11px; color: var(--muted2); }
@@ -467,7 +479,12 @@
       </select>
     </div>
     <div class="add-row2">
-      <input type="text" id="qLink" placeholder="Code link — GitHub, Gist, Notion…" autocomplete="off" />
+      <div id="linkList" class="link-list">
+        <div class="link-row">
+          <input type="text" class="q-link-input" placeholder="Code link — GitHub, Gist, Notion…" autocomplete="off" />
+          <button type="button" class="link-add-inline" onclick="addLinkRow()" title="Add another link">+</button>
+        </div>
+      </div>
       <textarea id="qNotes" placeholder="Notes — approach, complexity, edge cases…" style="height:38px"></textarea>
     </div>
     <div class="add-bottom">
@@ -679,7 +696,7 @@ function buildList() {
   }
   list.innerHTML = sorted.map(q => {
     const hasNotes = q.notes && q.notes.trim();
-    const hasLink  = q.link  && q.link.trim();
+    const hasLink  = (q.links && q.links.length) || (q.link && q.link.trim());
     const isOpen   = expandedId === q.id;
     return `
     <div class="q-item diff-${q.diff}" id="qi-${q.id}">
@@ -698,7 +715,12 @@ function buildList() {
           </div>
           <div>
             <div class="expand-label">Code</div>
-            ${hasLink ? `<a class="expand-link" href="${esc(q.link)}" target="_blank" rel="noopener">↗ ${esc(q.link)}</a>` : '<span style="color:var(--muted2);font-family:var(--font-mono);font-size:12px">No link.</span>'}
+            ${(() => {
+              const links = q.links && q.links.length ? q.links : (q.link ? [q.link] : []);
+              return links.length
+                ? `<div class="expand-links">${links.map(l => `<a class="expand-link" href="${esc(l)}" target="_blank" rel="noopener">↗ ${esc(l)}</a>`).join('')}</div>`
+                : '<span style="color:var(--muted2);font-family:var(--font-mono);font-size:12px">No link.</span>';
+            })()}
             <div style="margin-top:14px"><div class="expand-label">Logged</div><div class="expand-date">${q.date}</div></div>
           </div>
         </div>
@@ -737,19 +759,41 @@ function addQuestion() {
     diff:   document.getElementById('qDiff').value,
     topic:  document.getElementById('qTopic').value,
     source: document.getElementById('qSource').value,
-    link:   document.getElementById('qLink').value.trim(),
+    links:  getLinks(),
     notes:  document.getElementById('qNotes').value.trim(),
     date:   today(),
   });
   save();
   document.getElementById('qName').value  = '';
-  document.getElementById('qLink').value  = '';
+  clearLinks();
   document.getElementById('qNotes').value = '';
   render();
   const bar = document.getElementById('eloBar');
   bar.style.transition = 'none'; bar.style.opacity='0.3';
   setTimeout(()=>{ bar.style.transition='width 0.8s cubic-bezier(0.16,1,0.3,1)'; bar.style.opacity='1'; }, 60);
 }
+
+// ── MULTI-LINK ──
+function addLinkRow(val='') {
+  const list = document.getElementById('linkList');
+  const row = document.createElement('div');
+  row.className = 'link-row';
+  row.innerHTML = `<input type="text" class="q-link-input" placeholder="Another link…" autocomplete="off" value="${esc(val)}" /><button type="button" class="link-remove" onclick="this.parentElement.remove()" title="Remove">×</button>`;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function getLinks() {
+  return [...document.querySelectorAll('.q-link-input')]
+    .map(i => i.value.trim()).filter(Boolean);
+}
+
+function clearLinks() {
+  const list = document.getElementById('linkList');
+  // Keep only the first row, clear its value
+  list.innerHTML = `<div class="link-row"><input type="text" class="q-link-input" placeholder="Code link — GitHub, Gist, Notion…" autocomplete="off" /></div>`;
+}
+
 
 function render() { updateStats(); buildCalendar(); buildTopics(); buildTopicSelect(); buildList(); ECG.start(); }
 
