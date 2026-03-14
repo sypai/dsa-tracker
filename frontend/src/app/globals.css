@@ -1,26 +1,50 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f0ece4; --surface: #e8e3d9; --surface2: #dfd9ce; --surface3: #d6d0c4;
+  --border: #c9c2b4; --border2: #b8b0a0;
+  --text: #1a1a18; --muted: #6b6458; --muted2: #9b9288;
+  --accent: #b22a1e; --accent-dim: #c8382b; --accent-glow: rgba(178,42,30,0.08);
+  --easy: #1d7a3a; --medium: #b85c00; --hard: #b22a1e;
+  --cal-0: #ddd8cf; --cal-1: #f5c6c3; --cal-2: #e8857f; --cal-3: #d44f48; --cal-4: #b22a1e;
+  --cal-decay: #e8c9a0;
+  
+  /* Pointing to the Next.js optimized fonts we set up in layout.tsx */
+  --font-display: var(--font-bebas), sans-serif;
+  --font-body: var(--font-dm-sans), sans-serif;
+  --font-mono: var(--font-dm-mono), monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html.dark {
+  --bg: #0a0a0a; --surface: #111111; --surface2: #181818; --surface3: #1e1e1e;
+  --border: #252525; --border2: #2e2e2e;
+  --text: #e8e8e8; --muted: #666666; --muted2: #444444;
+  --accent: #c0392b; --accent-dim: #7a1f17; --accent-glow: rgba(192,57,43,0.1);
+  --easy: #2ecc71; --medium: #e67e22; --hard: #c0392b;
+  --cal-0: #1e1e1e; --cal-1: #4a1a16; --cal-2: #7a2a22; --cal-3: #a83328; --cal-4: #c0392b;
+  --cal-decay: #2e2410;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html { 
+  background: var(--bg); 
+  color: var(--text); 
+  font-family: var(--font-body); 
+  font-size: 15px; 
+  transition: background 0.25s, color 0.25s; 
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+body { 
+  min-height: 100vh; 
+  max-width: 1020px; 
+  margin: 0 auto; 
+  padding: 2rem 1.5rem 6rem; 
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 4px; } 
+::-webkit-scrollbar-track { background: var(--bg); } 
+::-webkit-scrollbar-thumb { background: var(--border2); }
