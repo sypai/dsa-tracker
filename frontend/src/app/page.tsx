@@ -1,21 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import Landing from "@/components/Landing";
+import AuthModal from "@/components/AuthModal";
 
 export default function Home() {
-  
-  // We will build the Auth Modal next, but for now, let's just log to the console
-  const handleSignIn = () => {
-    console.log("Trigger Sign In Modal");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+
+  const handleSignInClick = () => {
+    setAuthMode("signin");
+    setIsAuthModalOpen(true);
   };
 
-  const handleSignUp = () => {
-    console.log("Trigger Sign Up Modal");
+  const handleSignUpClick = () => {
+    setAuthMode("signup");
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
   };
 
   return (
     <main>
-      <Landing onSignIn={handleSignIn} onSignUp={handleSignUp} />
+      <Landing onSignIn={handleSignInClick} onSignUp={handleSignUpClick} />
+      
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={closeAuthModal} 
+        initialMode={authMode} 
+      />
     </main>
   );
 }

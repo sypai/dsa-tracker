@@ -75,3 +75,24 @@ body {
 ::-webkit-scrollbar { width: 4px; } 
 ::-webkit-scrollbar-track { background: var(--bg); } 
 ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* ── AUTH MODAL ── */
+.auth-overlay { display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 400; animation: fadeIn 0.15s ease; }
+.auth-modal { background: var(--surface); border: 1px solid var(--border2); padding: 2rem; position: relative; }
+.auth-modal::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
+.auth-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--text); letter-spacing: 0.05em; margin-bottom: 4px; }
+.auth-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 1.5rem; letter-spacing: 0.04em; }
+.auth-field { margin-bottom: 10px; }
+.auth-field label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); margin-bottom: 5px; }
+.auth-field input { width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 9px 11px; outline: none; transition: border-color 0.15s; }
+.auth-field input:focus { border-color: var(--accent); }
+.auth-field input::placeholder { color: var(--muted2); }
+.auth-submit { width: 100%; background: var(--accent); border: none; color: #f5f0e8; font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.1em; padding: 11px; cursor: pointer; margin-top: 6px; transition: background 0.15s; }
+.auth-submit:hover { background: #991f15; }
+.auth-switch { text-align: center; margin-top: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.auth-switch a { color: var(--accent); cursor: pointer; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+.auth-error { font-family: var(--font-mono); font-size: 11px; color: var(--accent); margin-top: 8px; }
+.auth-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; line-height: 1; }
+.auth-close:hover { color: var(--text); }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
