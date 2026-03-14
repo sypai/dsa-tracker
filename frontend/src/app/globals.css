@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -13,7 +11,7 @@
   --cal-0: #ddd8cf; --cal-1: #f5c6c3; --cal-2: #e8857f; --cal-3: #d44f48; --cal-4: #b22a1e;
   --cal-decay: #e8c9a0;
   
-  /* Pointing to the Next.js optimized fonts we set up in layout.tsx */
+  /* Next.js Font Variables injected from layout.tsx */
   --font-display: var(--font-bebas), sans-serif;
   --font-body: var(--font-dm-sans), sans-serif;
   --font-mono: var(--font-dm-mono), monospace;
@@ -44,7 +42,36 @@ body {
   padding: 2rem 1.5rem 6rem; 
 }
 
-/* Custom Scrollbar */
+/* ── HEADER ── */
+.header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+.logo { font-family: var(--font-display); font-size: 3rem; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
+.logo span { color: var(--accent); }
+.tagline { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+.theme-toggle { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; margin-top: 6px; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+/* ── LANDING PAGE ── */
+#landingPage { display: flex; min-height: 100vh; min-height: 100dvh; max-width: 1020px; margin: 0 auto; padding: 0 1.5rem; flex-direction: column; }
+.landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.8rem 0 1.2rem; border-bottom: 1px solid var(--border); }
+.landing-nav-right { display: flex; gap: 8px; align-items: stretch; }
+.landing-nav-right .theme-toggle, .landing-nav-right .ln-signin { height: 34px; padding: 0 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border2); background: none; color: var(--muted); transition: border-color 0.15s, color 0.15s; white-space: nowrap; margin-top: 0; }
+.landing-nav-right .theme-toggle:hover, .landing-nav-right .ln-signin:hover { border-color: var(--accent); color: var(--text); }
+.landing-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: clamp(3rem, 8vh, 6rem) 0 clamp(2rem, 5vh, 4rem); }
+.landing-eyebrow { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 1.2rem; }
+.landing-headline { font-family: var(--font-display); font-size: clamp(3rem, 8.5vw, 6.2rem); line-height: 0.95; color: var(--text); letter-spacing: 0.02em; margin-bottom: 1.6rem; max-width: 720px; }
+.landing-headline em { color: var(--accent); font-style: normal; }
+.landing-sub { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0.04em; line-height: 1.9; margin-bottom: 2.4rem; max-width: 400px; }
+.landing-cta-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.landing-cta, .landing-cta-secondary { height: 46px; padding: 0 32px; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; white-space: nowrap; display: inline-flex; align-items: center; }
+.landing-cta { background: var(--accent); border: 1px solid var(--accent); color: #f5f0e8; font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 0.12em; }
+.landing-cta:hover { background: #991f15; border-color: #991f15; }
+.landing-cta-secondary { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.landing-cta-secondary:hover { border-color: var(--accent); color: var(--text); }
+.landing-footer { padding: 1.4rem 0; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; color: var(--muted2); letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; }
+.landing-footer-links { display: flex; gap: 20px; }
+
+/* ── CUSTOM SCROLLBAR ── */
 ::-webkit-scrollbar { width: 4px; } 
 ::-webkit-scrollbar-track { background: var(--bg); } 
 ::-webkit-scrollbar-thumb { background: var(--border2); }
