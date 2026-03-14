@@ -56,6 +56,14 @@ body { min-height: 100vh; transition: background 0.25s, color 0.25s; }
 .acct-user { padding: 10px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--muted2); border-bottom: 1px solid var(--border); letter-spacing: 0.04em; }
 
 /* ── 3. LANDING PAGE ── */
+#landingPage { 
+  display: flex; 
+  flex-direction: column;
+  min-height: 100vh; 
+  max-width: 1020px; 
+  margin: 0 auto; 
+  padding: 0 1.5rem; 
+}
 .landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.8rem 0 1.2rem; border-bottom: 1px solid var(--border); }
 .landing-nav-right { display: flex; gap: 8px; align-items: stretch; }
 .landing-nav-right .theme-toggle, .landing-nav-right .ln-signin { height: 34px; padding: 0 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border2); background: none; color: var(--muted); transition: border-color 0.15s, color 0.15s; white-space: nowrap; margin-top: 0; }
