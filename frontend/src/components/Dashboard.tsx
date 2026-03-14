@@ -1,0 +1,401 @@
+"use client";
+
+import { useState, useEffect, useRef, useMemo } from "react";
+
+const DEFAULT_TOPICS = ['Array','String','Linked List','Tree','Graph','DP','Backtracking','Binary Search','Heap','Stack','Sliding Window','Two Pointers','Greedy','Math','Trie','Other'];
+const RANKS = [
+  { name:'NOVICE', min:0 }, { name:'APPRENTICE', min:50 }, { name:'CODER', min:100 },
+  { name:'SOLVER', min:200 }, { name:'ANALYST', min:350 }, { name:'ENGINEER', min:500 },
+  { name:'ARCHITECT', min:700 }, { name:'WIZARD', min:900 }, { name:'GRANDMASTER', min:1200 },
+];
+const ELO_BASE = 0;
+const ELO_GAIN: Record<string, number> = { easy:5, medium:15, hard:25 };
+const DECAY = 2;
+
+// Updated to support multiple links while keeping backwards compatibility with old local storage data
+type Question = { 
+  id: string; 
+  name: string; 
+  diff: string; 
+  topic: string; 
+  source: string; 
+  link?: string; 
+  links?: string[]; 
+  notes: string; 
+  date: string; 
+};
+
+export default function Dashboard({ user, onSignOut }: { user: { email: string, name: string }, onSignOut: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [customTopics, setCustomTopics] = useState<string[]>(DEFAULT_TOPICS);
+  const [activeTopic, setActiveTopic] = useState('All');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isAcctMenuOpen, setIsAcctMenuOpen] = useState(false);
+  
+  // Form State
+  const [qName, setQName] = useState("");
+  const [qDiff, setQDiff] = useState("medium");
+  const [qTopic, setQTopic] = useState("Array");
+  const [qSource, setQSource] = useState("LC");
+  const [qLinks, setQLinks] = useState<string[]>([""]); // Now an array of strings
+  const [qNotes, setQNotes] = useState("");
+  
+  // Topic Form State
+  const [showTopicForm, setShowTopicForm] = useState(false);
+  const [newTopic, setNewTopic] = useState("");
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    setQuestions(JSON.parse(localStorage.getItem('dsa_elo_v2') || '[]'));
+    setCustomTopics(JSON.parse(localStorage.getItem('dsa_topics') || 'null') || [...DEFAULT_TOPICS]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('dsa_elo_v2', JSON.stringify(questions));
+      localStorage.setItem('dsa_topics', JSON.stringify(customTopics));
+    }
+  }, [questions, customTopics, mounted]);
+
+  const stats = useMemo(() => {
+    let streak = 0;
+    const solvedDays = new Set(questions.map(q => q.date));
+    
+    let d = new Date(); d.setHours(0,0,0,0);
+    while (true) {
+      const key = d.toISOString().slice(0,10);
+      if (solvedDays.has(key)) { streak++; d.setDate(d.getDate()-1); }
+      else if (streak === 0) { d.setDate(d.getDate()-1); if (new Date().getTime()-d.getTime() > 2*86400000) break; }
+      else break;
+    }
+
+    if (!questions.length) return { elo: ELO_BASE, gained: 0, lost: 0, decayActive: false, gapDays: 0, pendingDecay: 0, streak: 0 };
+    
+    const gained = questions.reduce((s,q) => s + ELO_GAIN[q.diff], 0);
+    const sorted = [...questions].sort((a,b)=>a.date.localeCompare(b.date));
+    const firstDate = new Date(sorted[0].date); firstDate.setHours(0,0,0,0);
+    const todayD = new Date(); todayD.setHours(0,0,0,0);
+    
+    let missedDays = 0;
+    let curr = new Date(firstDate); curr.setDate(curr.getDate()+1);
+    while (curr <= todayD) {
+      if (!solvedDays.has(curr.toISOString().slice(0,10))) missedDays++;
+      curr.setDate(curr.getDate()+1);
+    }
+    
+    const lost = missedDays * DECAY;
+    const elo = Math.max(0, ELO_BASE + gained - lost);
+    
+    const lastDate = new Date(sorted[sorted.length-1].date); lastDate.setHours(0,0,0,0);
+    const gapDays = Math.round((todayD.getTime() - lastDate.getTime()) / 86400000);
+    const decayActive = gapDays > 1;
+    const pendingDecay = decayActive ? (gapDays - 1) * DECAY : 0;
+    
+    return { elo, gained, lost, decayActive, gapDays, pendingDecay, streak };
+  }, [questions]);
+
+  const rankInfo = useMemo(() => {
+    let idx = 0;
+    for (let i = RANKS.length-1; i >= 0; i--) { if (stats.elo >= RANKS[i].min) { idx=i; break; } }
+    const cur = RANKS[idx], nxt = RANKS[idx+1];
+    const pct = nxt ? Math.min(100, Math.round((stats.elo-cur.min)/(nxt.min-cur.min)*100)) : 100;
+    return { name:cur.name, pct, prevLabel:cur.name, nextLabel: nxt ? nxt.name : '★ MAX' };
+  }, [stats.elo]);
+
+  const handleAddQuestion = () => {
+    if (!qName.trim()) return;
+    
+    const filteredLinks = qLinks.map(l => l.trim()).filter(Boolean);
+
+    const newQ: Question = {
+      id: Date.now().toString(),
+      name: qName.trim(),
+      diff: qDiff,
+      topic: qTopic,
+      source: qSource,
+      links: filteredLinks,
+      notes: qNotes.trim(),
+      date: new Date().toISOString().slice(0,10)
+    };
+    setQuestions([...questions, newQ]);
+    
+    // Reset Form
+    setQName(""); 
+    setQLinks([""]); 
+    setQNotes("");
+  };
+
+  const updateLink = (index: number, value: string) => {
+    const newLinks = [...qLinks];
+    newLinks[index] = value;
+    setQLinks(newLinks);
+  };
+
+  const removeLink = (index: number) => {
+    setQLinks(qLinks.filter((_, i) => i !== index));
+  };
+
+  const handleAddTopic = () => {
+    if (!newTopic.trim() || customTopics.includes(newTopic.trim())) return;
+    setCustomTopics([...customTopics, newTopic.trim()]);
+    setShowTopicForm(false);
+    setNewTopic("");
+  };
+
+  useEffect(() => {
+    if (!mounted || !canvasRef.current) return;
+    let raf: number;
+    let offset = 0;
+    const W = 60, H = 22;
+    const beat = [ [0, .5],[.15,.5],[.22,.44],[.28,.56],[.33,.5], [.36,.5],[.40,.05],[.44,.95],[.48,.5], [.52,.38],[.58,.62],[.63,.5],[1,.5] ];
+    
+    const state = (stats.elo <= 0 && questions.length === 0) ? 'dead' : stats.decayActive ? 'decay' : stats.streak > 0 ? 'alive' : 'idle';
+    
+    const draw = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if(!ctx) return;
+      const st = getComputedStyle(document.documentElement);
+      const color = state==='alive' ? st.getPropertyValue('--easy').trim() : state==='decay' ? st.getPropertyValue('--medium').trim() : st.getPropertyValue('--muted2').trim();
+      const spd = state==='alive' ? 1.0 : state==='decay' ? 0.35 : state==='idle' ? 0.18 : 0;
+      
+      ctx.clearRect(0,0,W,H);
+      if (state==='dead') {
+        ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2);
+        ctx.strokeStyle=color; ctx.lineWidth=1; ctx.globalAlpha=0.3; ctx.stroke(); ctx.globalAlpha=1;
+        raf=requestAnimationFrame(draw); return;
+      }
+      
+      const cw = W * 0.85;
+      ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.2;
+      let first=true;
+      for (let c=-1; c<3; c++) {
+        const sx = c*cw - (offset%cw);
+        beat.forEach(([bx,by]) => {
+          const px=sx+bx*cw, py=by*H;
+          if (first){ctx.moveTo(px,py);first=false;} else ctx.lineTo(px,py);
+        });
+      }
+      ctx.stroke();
+      const bg = st.getPropertyValue('--surface').trim() || '#e8e3d9';
+      const g = ctx.createLinearGradient(0,0,W*0.3,0);
+      g.addColorStop(0,bg); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W*0.3,H);
+      offset+=spd;
+      raf=requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, [mounted, stats.elo, stats.decayActive, stats.streak, questions.length]);
+
+  if (!mounted) return <div className="min-h-screen flex items-center justify-center font-mono text-[var(--muted)]">Initializing Systems...</div>;
+
+  return (
+    <div id="dashboardPage" className="w-full max-w-[1020px] mx-auto px-6 py-12 pb-24">
+      {/* HEADER */}
+      <div className="header">
+        <div>
+          <div className="logo">DSA<span>.</span>LOG</div>
+          <div className="tagline">elo engine · time decay · grind or bleed</div>
+        </div>
+        <div className="header-right">
+          <button className="theme-toggle" onClick={() => document.documentElement.classList.toggle('dark')}>○ Theme</button>
+          <div className="relative">
+            <button className="acct-btn signed-in" onClick={() => setIsAcctMenuOpen(!isAcctMenuOpen)}>⊙ {user.name}</button>
+            {isAcctMenuOpen && (
+              <div className="acct-dropdown open">
+                <div className="acct-user">{user.email}</div>
+                <button className="acct-dropdown-item danger" onClick={onSignOut}>Sign out</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* TOP PANEL */}
+      <div className="top-panel">
+        <div className="elo-side">
+          <div className="elo-top-row">
+            <div className={`elo-rating ${stats.decayActive ? 'bleeding' : ''}`}>{stats.elo}</div>
+          </div>
+          <div className="elo-rank">{rankInfo.name}</div>
+          <div className="elo-delta">
+            Earned: <span className="gain">+{stats.gained}</span> &nbsp;·&nbsp; Decay: <span className="loss">-{stats.lost}</span>
+          </div>
+          <div className="elo-bar-wrap">
+            <div className="elo-bar-labels"><span>{rankInfo.prevLabel}</span><span>{rankInfo.nextLabel}</span></div>
+            <div className="elo-track"><div className="elo-fill" style={{width: `${rankInfo.pct}%`}}></div></div>
+          </div>
+        </div>
+        <div className="counts-side">
+          <div className="counts-grid">
+            <div className="count-cell"><div className="count-label">Solved</div><div className="count-val">{questions.length}</div></div>
+            <div className="count-cell"><div className="count-label">Easy</div><div className="count-val c-easy">{questions.filter(q=>q.diff==='easy').length}</div></div>
+            <div className="count-cell"><div className="count-label">Medium</div><div className="count-val c-medium">{questions.filter(q=>q.diff==='medium').length}</div></div>
+            <div className="count-cell"><div className="count-label">Hard</div><div className="count-val c-hard">{questions.filter(q=>q.diff==='hard').length}</div></div>
+          </div>
+        </div>
+      </div>
+
+      {/* DECAY BANNER */}
+      {stats.decayActive && questions.length > 0 && (
+        <div className="decay-banner">
+          <div className="decay-dot"></div>
+          <p>Streak broken — <strong>{stats.gapDays} days</strong> since last solve. Bleeding <strong>-{stats.pendingDecay} ELO</strong>. Solve something now.</p>
+        </div>
+      )}
+
+      {/* ACTIVITY */}
+      <div className="activity-block">
+        <div className="activity-header">
+          <div className="section-title !border-none !p-0 !m-0">Activity — last 120 days</div>
+          <div className="streak-inline">
+            <div className="streak-nums-row">
+              <span className="streak-inline-num">{stats.streak}</span>
+              <span className="streak-inline-label">day streak</span>
+            </div>
+            <div className="ecg-wrap"><canvas ref={canvasRef} width="60" height="22"></canvas></div>
+          </div>
+        </div>
+        <div className="h-[1px] bg-[var(--border)] mb-2.5"></div>
+        <div className="cal-grid">
+          {Array.from({length: 120}, (_, i) => {
+            const d = new Date(); d.setDate(d.getDate() - (119 - i));
+            const key = d.toISOString().slice(0,10);
+            const count = questions.filter(q => q.date === key).length;
+            const firstD = [...questions].sort((a,b)=>a.date.localeCompare(b.date))[0]?.date;
+            const isDecay = firstD && d > new Date(firstD) && count === 0 && d < new Date();
+            let lvl = count === 1 ? 'l1' : count <= 3 ? 'l2' : count <= 5 ? 'l3' : count >= 6 ? 'l4' : '';
+            return <div key={i} className={`cal-day ${count>0?lvl:isDecay?'decay':''} ${i===119?'today':''}`} title={`${key} ${count>0?count+' solved':isDecay?'-2 ELO':''}`} />
+          })}
+        </div>
+      </div>
+
+      {/* TOPICS */}
+      <div className="topics-block">
+        <div className="section-title">Topics</div>
+        <div className="topics-row">
+          <div className="topics">
+            <div className={`topic ${activeTopic==='All'?'active':''}`} onClick={()=>setActiveTopic('All')}>All<span className="count">{questions.length}</span></div>
+            {customTopics.map(t => (
+              <div key={t} className={`topic ${activeTopic===t?'active':''}`} onClick={()=>setActiveTopic(t)}>
+                {t}<span className="count">{questions.filter(q=>q.topic===t).length}</span>
+                <span className="remove-topic" onClick={(e)=>{e.stopPropagation(); setCustomTopics(customTopics.filter(x=>x!==t)); if(activeTopic===t) setActiveTopic('All');}}>×</span>
+              </div>
+            ))}
+          </div>
+          <button className="add-topic-btn" onClick={()=>setShowTopicForm(true)}>+ topic</button>
+        </div>
+        {showTopicForm && (
+          <div className="add-topic-form mt-2 flex gap-1.5">
+            <input type="text" value={newTopic} onChange={e=>setNewTopic(e.target.value)} placeholder="Topic name…" onKeyDown={e=>{if(e.key==='Enter')handleAddTopic(); if(e.key==='Escape')setShowTopicForm(false)}}/>
+            <button onClick={handleAddTopic}>Add</button>
+            <button className="cancel-btn" onClick={()=>setShowTopicForm(false)}>Cancel</button>
+          </div>
+        )}
+      </div>
+
+      {/* ADD FORM */}
+      <div className="add-section">
+        <div className="add-section-header" onClick={()=>setFormOpen(!formOpen)}>
+          <span>+ Log a Question</span><span className="toggle">{formOpen ? '▾' : '▸'}</span>
+        </div>
+        {formOpen && (
+          <div className="add-form-inner">
+            <div className="add-row">
+              <input type="text" placeholder="Question title..." value={qName} onChange={e=>setQName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleAddQuestion()}} />
+              <select value={qDiff} onChange={e=>setQDiff(e.target.value)}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select>
+              <select value={qTopic} onChange={e=>setQTopic(e.target.value)}>{customTopics.map(t=><option key={t} value={t}>{t}</option>)}</select>
+              <select value={qSource} onChange={e=>setQSource(e.target.value)}><option value="LC">LeetCode</option><option value="AE">AlgoExpert</option><option value="CTCI">CTCI</option><option value="EPI">EPI</option><option value="Other">Other</option></select>
+            </div>
+            <div className="add-row2">
+              <div className="link-list">
+                {qLinks.map((link, idx) => (
+                  <div key={idx} className="link-row">
+                    <input 
+                      type="text" 
+                      value={link} 
+                      onChange={e => updateLink(idx, e.target.value)}
+                      placeholder={idx === 0 ? "Code link — GitHub, Gist, Notion…" : "Another link…"}
+                    />
+                    {idx === 0 ? (
+                      <button type="button" className="link-add-inline" onClick={() => setQLinks([...qLinks, ""])} title="Add another link">+</button>
+                    ) : (
+                      <button type="button" className="link-remove" onClick={() => removeLink(idx)} title="Remove">×</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <textarea placeholder="Notes..." value={qNotes} onChange={e=>setQNotes(e.target.value)} />
+            </div>
+            <div className="add-bottom">
+              <div className="elo-preview">This solve: <span className="preview-val">+{ELO_GAIN[qDiff]}</span> &nbsp;·&nbsp; New rating: <span className="preview-val">{stats.elo + ELO_GAIN[qDiff]}</span></div>
+              <button className="add-btn" onClick={handleAddQuestion}>LOG IT</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* LIST */}
+      <div className="list-header"><span>Question</span><span>ELO</span><span>Source</span><span>Topic</span><span></span></div>
+      <div className="q-list">
+        {(activeTopic==='All'?questions:questions.filter(q=>q.topic===activeTopic)).slice().reverse().map(q => {
+          const combinedLinks = q.links && q.links.length > 0 ? q.links : (q.link ? [q.link] : []);
+          
+          return (
+            <div key={q.id} className={`q-item diff-${q.diff}`}>
+              <div className="q-main" onClick={()=>setExpandedId(expandedId===q.id?null:q.id)}>
+                <div className="q-name">{q.name}{q.notes && <span className="note-dot"></span>}</div>
+                <div className="q-elo-gain">+{ELO_GAIN[q.diff]}</div>
+                <div className="q-source">{q.source}</div>
+                <div className="q-topic">{q.topic}</div>
+                <button className="del-btn" onClick={(e)=>{e.stopPropagation(); setDeleteId(q.id);}}>×</button>
+              </div>
+              {expandedId === q.id && (
+                <div className="q-expand open">
+                  <div className="expand-grid">
+                    <div><div className="expand-label">Notes</div><div className="expand-notes">{q.notes || 'No notes.'}</div></div>
+                    <div>
+                      <div className="expand-label">Links</div>
+                      {combinedLinks.length > 0 ? (
+                        <div className="expand-links">
+                          {combinedLinks.map((l, i) => (
+                            <a key={i} className="expand-link" href={l} target="_blank" rel="noopener noreferrer">↗ {l}</a>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[var(--muted2)] font-mono text-xs">No links.</span>
+                      )}
+                      <div className="mt-3.5"><div className="expand-label">Logged</div><div className="expand-date">{q.date}</div></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {questions.length === 0 && <div className="empty"><span className="empty-big">#_</span>No questions yet. Log your first one above.</div>}
+      </div>
+
+      {/* DELETE MODAL */}
+      {deleteId && (
+        <div className="modal-overlay" onClick={()=>setDeleteId(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-title">Delete Question?</div>
+            <div className="modal-body">Remove <strong>{questions.find(q=>q.id===deleteId)?.name}</strong>? This will also reverse the ELO gained from it.</div>
+            <div className="modal-actions">
+              <button className="modal-cancel" onClick={()=>setDeleteId(null)}>Cancel</button>
+              <button className="modal-confirm" onClick={()=>{setQuestions(questions.filter(q=>q.id!==deleteId)); setDeleteId(null);}}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
