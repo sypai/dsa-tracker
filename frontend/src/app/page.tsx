@@ -31,7 +31,7 @@ export default function Home() {
   };
 
   // Prevent layout shift during Next.js hydration
-  if (!mounted) return null;
+  if (!mounted) return <div className="min-h-screen bg-[var(--bg)]" />; // 👈 CHANGE THIS LINE
 
   // If user is logged in, show the full Dashboard
   if (currentUser) {
