@@ -24,6 +24,14 @@ public class QuestionController {
         return ResponseEntity.ok(questions);
     }
 
+    // GET: Fetch questions for a specific user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Question>> getUserQuestions(@PathVariable Long userId) {
+        // We use the custom Repository method we created earlier!
+        List<Question> userQuestions = questionRepository.findByUserIdOrderByDateDesc(userId);
+        return ResponseEntity.ok(userQuestions);
+    }
+
     // POST: Log a new question
     @PostMapping
     public ResponseEntity<Question> logQuestion(@RequestBody Question question) {

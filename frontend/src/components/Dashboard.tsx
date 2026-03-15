@@ -51,24 +51,30 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     setQuestions(JSON.parse(localStorage.getItem('dsa_elo_v2') || '[]'));
     setCustomTopics(JSON.parse(localStorage.getItem('dsa_topics') || 'null') || [...DEFAULT_TOPICS]);
-    setMounted(true);
 
     const fetchQuestions = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/questions");
+        // 1. Pass the user.id dynamically into the URL
+        const response = await fetch(`http://localhost:8080/api/questions/user/${user.id}`);
         if (response.ok) {
           const data = await response.json();
-          setQuestions(data); // Load the real database rows into your UI!
+          setQuestions(data); // Load ONLY this user's rows
         }
       } catch (error) {
         console.error("Failed to fetch questions:", error);
       }
     };
 
-    fetchQuestions();
-  }, []);
+    // 2. Only run the fetch if we actually have a user ID!
+    if (user && user.id) {
+      fetchQuestions();
+    }
+    
+  // 3. Add 'user.id' to the dependency array so it refetches if the user changes
+  }, [user.id]);
 
   useEffect(() => {
     if (mounted) {
