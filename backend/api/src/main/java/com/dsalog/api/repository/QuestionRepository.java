@@ -10,4 +10,11 @@ import java.util.List;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     // Equivalent to: SELECT * FROM questions WHERE user_id = ? ORDER BY date DESC
     List<Question> findByUserIdOrderByDateDesc(Long userId);
+
+    // 1. Has this user ever solved a question? (We don't want to bleed brand new
+    // users!)
+    long countByUserId(Long userId);
+
+    // 2. Did they solve a question on a specific date?
+    boolean existsByUserIdAndDate(Long userId, String date);
 }
