@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data // Lombok magic: Generates all getters, setters, and constructors automatically
 @Entity // Tells Spring Boot: "Make a database table out of this"
-@Table(name = "users") 
+@Table(name = "users")
 public class User {
 
     @Id
@@ -22,7 +22,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private Integer currentElo = 0;
+    private Integer currentElo = 1200;
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

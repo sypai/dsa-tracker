@@ -19,13 +19,15 @@ public class EloDecayJob {
 
     // Cron syntax: Seconds, Minutes, Hours, Day of month, Month, Day of week
     // "0 0 0 * * ?" = Run exactly at 00:00:00 (Midnight) every single day
-    @Scheduled(cron = "0 0 0 * * ?")
+    // @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(fixedRate = 10000) // Runs every 10 seconds
     public void executeMidnightDecay() {
         System.out.println("The Reaper has awoken. Checking for broken streaks...");
 
         // We want to check if they solved anything YESTERDAY,
         // since this runs at the exact millisecond today begins.
-        String yesterday = LocalDate.now().minusDays(1).toString();
+        // 👈 Keep this as a LocalDate object! Remove the .toString()
+        LocalDate yesterday = LocalDate.now().minusDays(1);
 
         List<User> allUsers = userRepository.findAll();
 

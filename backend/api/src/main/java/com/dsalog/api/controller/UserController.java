@@ -27,7 +27,7 @@ public class UserController {
         }
 
         // 2. Set default values and save
-        user.setCurrentElo(0); // Everyone starts at 1200 ELO!
+        user.setCurrentElo(1200); // Everyone starts at 1200 ELO!
         // TODO: Hash the password later!
 
         User savedUser = userRepository.save(user);
@@ -53,5 +53,15 @@ public class UserController {
 
         // 3. Success! Return the user data to the frontend
         return ResponseEntity.ok(user);
+    }
+
+    // GET: Fetch the latest user data (including their true ELO)
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            return ResponseEntity.ok(userOpt.get());
+        }
+        return ResponseEntity.notFound().build();
     }
 }

@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 
 const DEFAULT_TOPICS = ['Array','String','Linked List','Tree','Graph','DP','Backtracking','Binary Search','Heap','Stack','Sliding Window','Two Pointers','Greedy','Math','Trie','Other'];
 const RANKS = [
-  { name:'NOVICE', min:0 }, { name:'APPRENTICE', min:50 }, { name:'CODER', min:100 },
-  { name:'SOLVER', min:200 }, { name:'ANALYST', min:350 }, { name:'ENGINEER', min:500 },
-  { name:'ARCHITECT', min:700 }, { name:'WIZARD', min:900 }, { name:'GRANDMASTER', min:1200 },
+  { name:'NOVICE', min:1200 }, { name:'APPRENTICE', min:1250 }, { name:'CODER', min:1300 },
+  { name:'SOLVER', min:1400 }, { name:'ANALYST', min:1550 }, { name:'ENGINEER', min:1700 },
+  { name:'ARCHITECT', min:1900 }, { name:'WIZARD', min:2100 }, { name:'GRANDMASTER', min:2400 },
 ];
 const ELO_BASE = 0;
 const ELO_GAIN: Record<string, number> = { easy:5, medium:15, hard:25 };
@@ -29,6 +29,14 @@ type Question = {
 export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
+  // 1. Check local storage first! If it's not there, default to 1200.
+  const [realElo, setRealElo] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const cachedElo = localStorage.getItem("dsa_real_elo");
+      if (cachedElo) return parseInt(cachedElo, 10);
+    }
+    return 1200;
+  }); // 👈 The true database ELO
   const [customTopics, setCustomTopics] = useState<string[]>(DEFAULT_TOPICS);
   const [activeTopic, setActiveTopic] = useState('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -50,31 +58,38 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // 1. The Reusable Sync Function
+  const fetchDashboardData = async () => {
+    if (!user || !user.id) return;
+    try {
+      // Fetch Questions
+      const qRes = await fetch(`http://localhost:8080/api/questions/user/${user.id}`);
+      if (qRes.ok) setQuestions(await qRes.json());
+
+      // Fetch Fresh User ELO
+      const uRes = await fetch(`http://localhost:8080/api/users/${user.id}`);
+      if (uRes.ok) {
+        const uData = await uRes.json();
+        setRealElo(uData.currentElo);
+
+        // 2. Cache the real ELO so it doesn't flicker on the next refresh!
+        localStorage.setItem("dsa_real_elo", uData.currentElo.toString());
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    }
+  };
+
+  // 2. Run it exactly once when the component loads
   useEffect(() => {
     setMounted(true);
-    setQuestions(JSON.parse(localStorage.getItem('dsa_elo_v2') || '[]'));
-    setCustomTopics(JSON.parse(localStorage.getItem('dsa_topics') || 'null') || [...DEFAULT_TOPICS]);
-
-    const fetchQuestions = async () => {
-      try {
-        // 1. Pass the user.id dynamically into the URL
-        const response = await fetch(`http://localhost:8080/api/questions/user/${user.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setQuestions(data); // Load ONLY this user's rows
-        }
-      } catch (error) {
-        console.error("Failed to fetch questions:", error);
-      }
-    };
-
-    // 2. Only run the fetch if we actually have a user ID!
-    if (user && user.id) {
-      fetchQuestions();
-    }
     
-  // 3. Add 'user.id' to the dependency array so it refetches if the user changes
-  }, [user.id]);
+    // Load local storage fallbacks just in case
+    const cachedQuestions = localStorage.getItem('dsa_elo_v2');
+    if (cachedQuestions) setQuestions(JSON.parse(cachedQuestions));
+    
+    fetchDashboardData();
+  }, [user?.id]);
 
   useEffect(() => {
     if (mounted) {
@@ -87,6 +102,7 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
     let streak = 0;
     const solvedDays = new Set(questions.map(q => q.date));
     
+    // 1. Calculate the Streak (strictly for the UI graph)
     let d = new Date(); d.setHours(0,0,0,0);
     while (true) {
       const key = d.toISOString().slice(0,10);
@@ -95,30 +111,23 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
       else break;
     }
 
-    if (!questions.length) return { elo: ELO_BASE, gained: 0, lost: 0, decayActive: false, gapDays: 0, pendingDecay: 0, streak: 0 };
+    if (!questions.length) return { elo: realElo, gained: 0, lost: 0, decayActive: false, gapDays: 0, pendingDecay: 0, streak: 0 };
     
+    // 2. The new Single Source of Truth Math!
     const gained = questions.reduce((s,q) => s + ELO_GAIN[q.diff], 0);
+    const elo = realElo; // 👈 Directly from Postgres
+    const lost = Math.max(0, 1200 + gained - realElo); // 👈 Pure algebra, perfectly synced!
+    
+    // 3. Keep the UI gap calculations for the warning banner
     const sorted = [...questions].sort((a,b)=>a.date.localeCompare(b.date));
-    const firstDate = new Date(sorted[0].date); firstDate.setHours(0,0,0,0);
     const todayD = new Date(); todayD.setHours(0,0,0,0);
-    
-    let missedDays = 0;
-    let curr = new Date(firstDate); curr.setDate(curr.getDate()+1);
-    while (curr <= todayD) {
-      if (!solvedDays.has(curr.toISOString().slice(0,10))) missedDays++;
-      curr.setDate(curr.getDate()+1);
-    }
-    
-    const lost = missedDays * DECAY;
-    const elo = Math.max(0, ELO_BASE + gained - lost);
-    
     const lastDate = new Date(sorted[sorted.length-1].date); lastDate.setHours(0,0,0,0);
     const gapDays = Math.round((todayD.getTime() - lastDate.getTime()) / 86400000);
     const decayActive = gapDays > 1;
-    const pendingDecay = decayActive ? (gapDays - 1) * DECAY : 0;
+    const pendingDecay = decayActive ? (gapDays - 1) * 2 : 0;
     
     return { elo, gained, lost, decayActive, gapDays, pendingDecay, streak };
-  }, [questions]);
+  }, [questions, realElo]); // 👈 Added realElo to dependency array
 
   const rankInfo = useMemo(() => {
     let idx = 0;
@@ -162,6 +171,9 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
         // 5. Update UI with the real data
         setQuestions([savedQuestion, ...questions]);
         
+        // 👈 ASK THE DB FOR THE NEW ELO!
+        fetchDashboardData();
+
         // 6. Reset Form
         setQName(""); 
         setQLinks([""]); 
@@ -187,6 +199,8 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
         // 2. If the database deleted it successfully, remove it from the UI!
         setQuestions(questions.filter(q => q.id !== deleteId));
         setDeleteId(null); // Close the modal
+        // 👈 ASK THE DB FOR THE NEW ELO!
+        fetchDashboardData();
       } else {
         console.error("Backend refused to delete:", response.status);
       }
