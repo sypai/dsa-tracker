@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Component // Tells Spring Boot to load this into memory on startup
@@ -26,8 +27,8 @@ public class EloDecayJob {
 
         // We want to check if they solved anything YESTERDAY,
         // since this runs at the exact millisecond today begins.
-        // 👈 Keep this as a LocalDate object! Remove the .toString()
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        ZoneId istZone = ZoneId.of("Asia/Kolkata");
+        LocalDate yesterday = LocalDate.now(istZone).minusDays(1);
 
         List<User> allUsers = userRepository.findAll();
 
