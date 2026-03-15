@@ -7,23 +7,33 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: "signin" | "signup";
-  onSuccess: (user: any) => void; // Using 'any' for now, or you can strictly type it to match your Spring Boot User model
+  onSuccess: (user: any) => void;
+  setIsLoading: (loading: boolean) => void; // 👈 New prop
+  setError: (msg: string | null) => void;   // 👈 New prop
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode = "signin", onSuccess }: AuthModalProps) {
+export default function AuthModal({ 
+  isOpen, 
+  onClose, 
+  initialMode = "signin", 
+  onSuccess,
+  setIsLoading,
+  setError 
+}: AuthModalProps) {
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState(""); // Keeping a local one for simple validation
 
   useEffect(() => {
     setMode(initialMode);
     setEmail("");
     setPassword("");
     setName("");
-    setError("");
-  }, [isOpen, initialMode]);
+    setLocalError("");
+    setError(null); // Clear global errors when opening
+  }, [isOpen, initialMode, setError]);
 
   if (!isOpen) return null;
 
@@ -31,43 +41,48 @@ export default function AuthModal({ isOpen, onClose, initialMode = "signin", onS
 
   const handleToggleMode = () => {
     setMode(isSignup ? "signin" : "signup");
-    setError("");
+    setLocalError("");
+    setError(null);
   };
 
   const handleSubmit = async () => {
+    // Basic UI Validation
     if (!email || !password) {
-      setError("Email and password required.");
+      setLocalError("Email and password required.");
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setLocalError("Password must be at least 6 characters.");
       return;
     }
     
-    // 1. Define the endpoint and payload based on the current mode
+    setLocalError("");
+    setError(null);
+    setIsLoading(true); // 👈 START THE ENGINE PULSE
+
     const endpoint = isSignup ? '/users/register' : '/users/login';
     const payload = isSignup ? { name, email, password } : { email, password };
 
     try {
-      // 2. Fire the request to your Spring Boot backend
       const response = await dsaFetch(`${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        // 3. Success! Get the real user data back from Postgres
         const userData = await response.json();
         onSuccess(userData);
         onClose();
       } else {
-        // 4. Handle backend validation errors (e.g., "Email is already taken.")
-        const errorMsg = await response.text();
-        setError(errorMsg);
+        // Mask technical errors with a friendly message
+        const rawError = await response.text();
+        setLocalError(rawError || "Invalid credentials.");
       }
-    } catch (err) {
-      setError("Failed to connect to the server. Is the backend running?");
+    } catch (err: any) {
+      // If the engine is down, use the global error from page.tsx
+      setError(err.message || "Engine offline. The Reaper is likely sleeping.");
+    } finally {
+      setIsLoading(false); // 👈 STOP THE ENGINE PULSE
     }
   };
 
@@ -97,9 +112,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "signin", onS
           <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         
-        <div className="auth-error min-h-[16px] text-[var(--accent)] mt-2">{error}</div>
+        <div className="auth-error min-h-[16px] text-[var(--accent)] mt-2">{localError}</div>
         
-        {/* Swapped onClick to the new async function */}
         <button className="auth-submit mt-4" onClick={handleSubmit}>
           {isSignup ? 'CREATE ACCOUNT' : 'SIGN IN'}
         </button>
