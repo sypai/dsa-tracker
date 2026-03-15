@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import Landing from "@/components/Landing";
 import AuthModal from "@/components/AuthModal";
 import Dashboard from "@/components/Dashboard";
+import { BioMonitor } from "@/components/BioMonitor";
 
 const SyncOverlay = () => {
   const [showLongWaitMessage, setShowLongWaitMessage] = useState(false);
 
   useEffect(() => {
-    // Render's free tier can take a bit to wake up. This keeps the user informed.
+    // Render's free tier can take a bit to wake up
     const timer = setTimeout(() => setShowLongWaitMessage(true), 5000);
     return () => clearTimeout(timer);
   }, []);
@@ -24,18 +25,12 @@ const SyncOverlay = () => {
         .animate-engine-scan {
           animation: engine-scan 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
-        .data-block {
-          animation: pulse-block 1s infinite alternate;
-        }
-        @keyframes pulse-block {
-          0% { opacity: 0.2; transform: scaleY(0.8); }
-          100% { opacity: 1; transform: scaleY(1.1); }
-        }
       `}</style>
       
-      <div className="relative w-full max-w-[320px] p-8 bg-[var(--surface)] border border-[var(--border2)] shadow-2xl flex flex-col items-center text-center">
+      {/* Increased padding: px-8 py-10 for more breathing room */}
+      <div className="relative w-full max-w-[320px] px-8 py-10 bg-[var(--surface)] border border-[var(--border2)] shadow-2xl flex flex-col items-center text-center">
         
-        {/* The Scanning Accent Line (matches AuthModal) */}
+        {/* The Scanning Accent Line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--border2)] overflow-hidden">
           <div className="absolute top-0 bottom-0 w-[50%] bg-[var(--text)] animate-engine-scan" />
         </div>
@@ -44,20 +39,18 @@ const SyncOverlay = () => {
         <div className="font-mono text-[var(--text)] text-sm uppercase tracking-widest mb-1 mt-2">
           Syncing Engine
         </div>
-        <div className="font-mono text-[var(--muted)] text-[10px] uppercase tracking-widest mb-6">
+        <div className="font-mono text-[var(--muted)] text-[10px] uppercase tracking-widest mb-10">
           Establishing Handshake...
         </div>
 
-        {/* Raw Data-Block Loader */}
-        <div className="flex gap-2">
-          <div className="w-2 h-4 bg-[var(--text)] data-block" style={{ animationDelay: '0ms' }} />
-          <div className="w-2 h-4 bg-[var(--text)] data-block" style={{ animationDelay: '200ms' }} />
-          <div className="w-2 h-4 bg-[var(--text)] data-block" style={{ animationDelay: '400ms' }} />
+        {/* The BioMonitor taking center stage (scaled up slightly for impact) */}
+        <div className="w-full flex justify-center scale-[1.5] mb-6 opacity-90 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
+          <BioMonitor status="alive" />
         </div>
 
-        {/* Cold Start Warning */}
+        {/* Cold Start Warning with its own spacing */}
         {showLongWaitMessage && (
-          <div className="mt-8 pt-4 border-t border-[var(--border2)] w-full">
+          <div className="mt-8 pt-5 border-t border-[var(--border2)] w-full">
             <p className="font-mono text-[10px] text-[var(--accent)] uppercase tracking-widest animate-pulse">
               Cold start detected.<br/>Waking the Reaper...
             </p>
@@ -67,7 +60,6 @@ const SyncOverlay = () => {
     </div>
   );
 };
-
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
