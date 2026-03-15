@@ -75,28 +75,41 @@ export default function Dashboard({ user, onSignOut, setIsLoading, setError }: D
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // 1. The Reusable Sync Function
   const fetchDashboardData = async () => {
     if (!user || !user.id) return;
     setIsLoading(true);
     try {
-      // Fetch Questions
       const qRes = await dsaFetch(`/questions/user/${user.id}`);
       if (qRes.ok) setQuestions(await qRes.json());
 
-      // Fetch Fresh User ELO
       const uRes = await dsaFetch(`/users/${user.id}`);
       if (uRes.ok) {
         const uData = await uRes.json();
         setRealElo(uData.currentElo);
-
-        // 2. Cache the real ELO so it doesn't flicker on the next refresh!
         localStorage.setItem("dsa_real_elo", uData.currentElo.toString());
+        
+        // Load topics from the DB
+        if (uData.customTopics && uData.customTopics.length > 0) {
+          setCustomTopics(uData.customTopics);
+        }
       }
     } catch (err: any) {
-        setError(err.message); // This will show "Session issue" not "401 Missing Key"
+        setError(err.message);
     } finally {
         setIsLoading(false);
+    }
+  };
+
+  // Add this helper function inside Dashboard
+  const syncTopicsToDB = async (newTopicsList: string[]) => {
+    try {
+      await dsaFetch(`/users/${user.id}/topics`, {
+        method: "PUT",
+        body: JSON.stringify(newTopicsList)
+      });
+    } catch (err: any) {
+      console.error("Failed to sync topics to DB", err);
+      // Optional: setError("Could not save topic to cloud.");
     }
   };
 
@@ -278,10 +291,15 @@ export default function Dashboard({ user, onSignOut, setIsLoading, setError }: D
   };
 
   const handleAddTopic = () => {
-    if (!newTopic.trim() || customTopics.includes(newTopic.trim())) return;
-    setCustomTopics([...customTopics, newTopic.trim()]);
+    const topicToAdd = newTopic.trim();
+    if (!topicToAdd || customTopics.includes(topicToAdd)) return;
+    
+    const updatedTopics = [...customTopics, topicToAdd];
+    setCustomTopics(updatedTopics); // Optimistic UI update
     setShowTopicForm(false);
     setNewTopic("");
+    
+    syncTopicsToDB(updatedTopics); // Push to DB
   };
 
   useEffect(() => {
@@ -491,7 +509,17 @@ export default function Dashboard({ user, onSignOut, setIsLoading, setError }: D
             {customTopics.map(t => (
               <div key={t} className={`topic ${activeTopic===t?'active':''}`} onClick={()=>setActiveTopic(t)}>
                 {t}<span className="count">{questions.filter(q=>q.topic===t).length}</span>
-                <span className="remove-topic" onClick={(e)=>{e.stopPropagation(); setCustomTopics(customTopics.filter(x=>x!==t)); if(activeTopic===t) setActiveTopic('All');}}>×</span>
+
+                <span className="remove-topic" onClick={(e) => {
+                  e.stopPropagation(); 
+                  const updatedTopics = customTopics.filter(x => x !== t);
+                  setCustomTopics(updatedTopics); 
+                  if (activeTopic === t) setActiveTopic('All');
+                  
+                  syncTopicsToDB(updatedTopics); // Push to DB
+                }}>×
+                </span>  
+                
               </div>
             ))}
           </div>

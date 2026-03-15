@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -62,5 +63,14 @@ public class UserController {
             return ResponseEntity.ok(userOpt.get());
         }
         return ResponseEntity.notFound().build();
+    }
+
+    // Add this new endpoint
+    @PutMapping("/{id}/topics")
+    public ResponseEntity<User> updateTopics(@PathVariable Long id, @RequestBody List<String> topics) {
+        return userRepository.findById(id).map(user -> {
+            user.setCustomTopics(topics);
+            return ResponseEntity.ok(userRepository.save(user));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
