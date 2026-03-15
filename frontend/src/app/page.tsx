@@ -7,49 +7,54 @@ import Dashboard from "@/components/Dashboard";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-
+  
+  // 1. Create a state to hold the logged-in user
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  
   useEffect(() => {
-    // Check if the user was already logged in on refresh
-    const savedUser = localStorage.getItem("dsa_user");
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
     setMounted(true);
+    // 2. We use ONE consistent key: "dsa_user"
+    const storedUser = localStorage.getItem("dsa_user");
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
   }, []);
 
-  const handleAuthSuccess = (user: { email: string, name: string }) => {
-    setCurrentUser(user);
-    localStorage.setItem("dsa_user", JSON.stringify(user));
+  // Prevent layout shift during Next.js hydration
+  if (!mounted) return <div className="min-h-screen bg-[var(--bg)]" />;
+
+  // 3. Handle successful login/signup
+  const handleAuthSuccess = (userData: any) => {
+    setCurrentUser(userData);
+    localStorage.setItem("dsa_user", JSON.stringify(userData)); // Consistent key
+    setIsAuthModalOpen(false); 
   };
 
+  // 4. Handle sign out
   const handleSignOut = () => {
     setCurrentUser(null);
-    localStorage.removeItem("dsa_user");
+    localStorage.removeItem("dsa_user"); // Consistent key
   };
 
-  // Prevent layout shift during Next.js hydration
-  if (!mounted) return <div className="min-h-screen bg-[var(--bg)]" />; // 👈 CHANGE THIS LINE
-
-  // If user is logged in, show the full Dashboard
-  if (currentUser) {
-    return <Dashboard user={currentUser} onSignOut={handleSignOut} />;
-  }
-
-  // Otherwise, show the Landing Page and Auth Modal
+  // 5. Single, unified return statement!
   return (
     <main>
-      <Landing 
-        onSignIn={() => { setAuthMode("signin"); setIsAuthModalOpen(true); }} 
-        onSignUp={() => { setAuthMode("signup"); setIsAuthModalOpen(true); }} 
-      />
+      {currentUser ? (
+        <Dashboard user={currentUser} onSignOut={handleSignOut} /> 
+      ) : (
+        <Landing 
+          onSignIn={() => { setAuthMode("signin"); setIsAuthModalOpen(true); }}
+          onSignUp={() => { setAuthMode("signup"); setIsAuthModalOpen(true); }}
+        />
+      )}
+
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
-        initialMode={authMode} 
-        onSuccess={handleAuthSuccess}
+        initialMode={authMode}
+        onSuccess={handleAuthSuccess} 
       />
     </main>
   );

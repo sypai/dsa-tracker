@@ -25,7 +25,8 @@ type Question = {
   date: string; 
 };
 
-export default function Dashboard({ user, onSignOut }: { user: { email: string, name: string }, onSignOut: () => void }) {
+// Change the very top of your Dashboard function to this:
+export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [customTopics, setCustomTopics] = useState<string[]>(DEFAULT_TOPICS);
@@ -53,6 +54,20 @@ export default function Dashboard({ user, onSignOut }: { user: { email: string, 
     setQuestions(JSON.parse(localStorage.getItem('dsa_elo_v2') || '[]'));
     setCustomTopics(JSON.parse(localStorage.getItem('dsa_topics') || 'null') || [...DEFAULT_TOPICS]);
     setMounted(true);
+
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/questions");
+        if (response.ok) {
+          const data = await response.json();
+          setQuestions(data); // Load the real database rows into your UI!
+        }
+      } catch (error) {
+        console.error("Failed to fetch questions:", error);
+      }
+    };
+
+    fetchQuestions();
   }, []);
 
   useEffect(() => {
@@ -107,27 +122,50 @@ export default function Dashboard({ user, onSignOut }: { user: { email: string, 
     return { name:cur.name, pct, prevLabel:cur.name, nextLabel: nxt ? nxt.name : '★ MAX' };
   }, [stats.elo]);
 
-  const handleAddQuestion = () => {
+  const handleAddQuestion = async () => { // 👈 1. Make it async
     if (!qName.trim()) return;
     
     const filteredLinks = qLinks.map(l => l.trim()).filter(Boolean);
 
-    const newQ: Question = {
-      id: Date.now().toString(),
+    // 2. Build the payload for Spring Boot (Notice we removed the fake 'id')
+    const payload = {
       name: qName.trim(),
       diff: qDiff,
       topic: qTopic,
       source: qSource,
       links: filteredLinks,
       notes: qNotes.trim(),
-      date: new Date().toISOString().slice(0,10)
+      date: new Date().toISOString().slice(0,10),
+      user: { id: user.id } // Use the real ID of the person logged in!
     };
-    setQuestions([...questions, newQ]);
-    
-    // Reset Form
-    setQName(""); 
-    setQLinks([""]); 
-    setQNotes("");
+
+    try {
+      // 3. Send it to the backend
+      const response = await fetch("http://localhost:8080/api/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        // 4. Get the saved question back from Spring Boot (it now has a real DB ID!)
+        const savedQuestion = await response.json();
+        
+        // 5. Update UI with the real data
+        setQuestions([savedQuestion, ...questions]);
+        
+        // 6. Reset Form
+        setQName(""); 
+        setQLinks([""]); 
+        setQNotes("");
+      } else {
+        console.error("Backend rejected the save:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to connect to API:", error);
+    }
   };
 
   const updateLink = (index: number, value: string) => {
@@ -211,7 +249,8 @@ export default function Dashboard({ user, onSignOut }: { user: { email: string, 
             {isAcctMenuOpen && (
               <div className="acct-dropdown open">
                 <div className="acct-user">{user.email}</div>
-                <button className="acct-dropdown-item danger" onClick={onSignOut}>Sign out</button>
+                {/* Hook the button up! */}
+                <button className="acct-dropdown-item danger" onClick={onSignOut}>Sign Out</button>
               </div>
             )}
           </div>
@@ -221,9 +260,34 @@ export default function Dashboard({ user, onSignOut }: { user: { email: string, 
       {/* TOP PANEL */}
       <div className="top-panel">
         <div className="elo-side">
-          <div className="elo-top-row">
+          
+        <div className="elo-top-row">
             <div className={`elo-rating ${stats.decayActive ? 'bleeding' : ''}`}>{stats.elo}</div>
+            
+            {/* The Restored Tooltip */}
+            <div className="elo-tip">?
+              <div className="elo-tooltip">
+                <strong>ELO System</strong>
+                <div className="trow"><span>Starting rating</span><span>1200</span></div> {/* Note: I updated this to 1200 to match our new DB logic! */}
+                <div className="trow"><span>Easy solve</span><span>+5</span></div>
+                <div className="trow"><span>Medium solve</span><span>+15</span></div>
+                <div className="trow"><span>Hard solve</span><span>+25</span></div>
+                <div className="trow"><span>Missed day (after first solve)</span><span style={{ color: 'var(--accent)' }}>-2</span></div>
+                
+                <strong style={{ marginTop: '10px' }}>Rank Thresholds</strong>
+                <div className="trow"><span>Novice</span><span>1200</span></div>
+                <div className="trow"><span>Apprentice</span><span>1250</span></div>
+                <div className="trow"><span>Coder</span><span>1300</span></div>
+                <div className="trow"><span>Solver</span><span>1400</span></div>
+                <div className="trow"><span>Analyst</span><span>1550</span></div>
+                <div className="trow"><span>Engineer</span><span>1700</span></div>
+                <div className="trow"><span>Architect</span><span>1900</span></div>
+                <div className="trow"><span>Wizard</span><span>2100</span></div>
+                <div className="trow"><span>Grandmaster</span><span>2400</span></div>
+              </div>
+            </div>
           </div>
+
           <div className="elo-rank">{rankInfo.name}</div>
           <div className="elo-delta">
             Earned: <span className="gain">+{stats.gained}</span> &nbsp;·&nbsp; Decay: <span className="loss">-{stats.lost}</span>
@@ -275,6 +339,15 @@ export default function Dashboard({ user, onSignOut }: { user: { email: string, 
             return <div key={i} className={`cal-day ${count>0?lvl:isDecay?'decay':''} ${i===119?'today':''}`} title={`${key} ${count>0?count+' solved':isDecay?'-2 ELO':''}`} />
           })}
         </div>
+        <div className="cal-legend">
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-0)' }}></div> none
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-1)' }}></div> 1
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-2)' }}></div> 2–3
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-3)' }}></div> 4–5
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-4)' }}></div> 6+
+        &nbsp;&nbsp;
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-decay' }}></div> decay day
+  </div>
       </div>
 
       {/* TOPICS */}

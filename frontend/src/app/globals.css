@@ -134,8 +134,24 @@ body { min-height: 100vh; transition: background 0.25s, color 0.25s; }
 #ecgCanvas { display: block; }
 .streak-nums-row { display: flex; align-items: baseline; gap: 5px; }
 
-.cal-legend { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 10px; }
-.cal-legend-swatch { width: 11px; height: 11px; flex-shrink: 0; }
+.cal-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+  justify-content: flex-end; /* Pushes it to the right side */
+}
+
+.cal-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  /* Optional: Adds a tiny border if your background is very light */
+  border: 1px solid rgba(255, 255, 255, 0.05); 
+}
 .cal-grid { display: grid; grid-template-columns: repeat(auto-fill, 13px); gap: 3px; margin-top: 8px; }
 .cal-day { width: 13px; height: 13px; background: var(--cal-0); flex-shrink: 0; transition: opacity 0.1s; cursor: default; }
 .cal-day.l1 { background: var(--cal-1); }
