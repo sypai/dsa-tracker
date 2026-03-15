@@ -19,11 +19,22 @@
 }
 
 html.dark {
+  /* Kept your deep, dark backgrounds exactly the same */
   --bg: #0a0a0a; --surface: #111111; --surface2: #181818; --surface3: #1e1e1e;
-  --border: #252525; --border2: #2e2e2e;
-  --text: #e8e8e8; --muted: #666666; --muted2: #444444;
+  
+  /* Brightened --border2 slightly so input fields and topics have better definition */
+  --border: #252525; --border2: #3a3a3a; 
+  
+  /* THE FIX: Drastically brightened the muted text for readability */
+  --text: #e8e8e8; 
+  --muted: #a3a3a3;  /* WAS #666666 - Now a crisp silver for taglines and topics */
+  --muted2: #737373; /* WAS #444444 - Now legible enough for placeholders/notes */
+  
+  /* Kept your brand colors untouched */
   --accent: #c0392b; --accent-dim: #7a1f17; --accent-glow: rgba(192,57,43,0.1);
   --easy: #2ecc71; --medium: #e67e22; --hard: #c0392b;
+  
+  /* Kept your calendar heatmap untouched */
   --cal-0: #1e1e1e; --cal-1: #4a1a16; --cal-2: #7a2a22; --cal-3: #a83328; --cal-4: #c0392b;
   --cal-decay: #2e2410;
 }
