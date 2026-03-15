@@ -2,7 +2,7 @@
     "crons": [
       {
         "path": "/api/wake",
-        "schedule": "27 18 * * *"
+        "schedule": "25 18 * * *"
       }
     ]
   }
