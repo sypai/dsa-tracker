@@ -21,9 +21,21 @@ export const dsaFetch = async (endpoint: string, options: RequestInit = {}) => {
   
     try {
       const response = await fetch(url, { ...options, headers });
+      if (!response.ok) {
+        // 1. Technical Log (visible to you in F12 for debugging)
+        console.error(`[INTERNAL ERROR] Status: ${response.status} at ${endpoint}`);
+        
+        // 2. Friendly Error (What the user gets)
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Session issue. Please try signing in again.");
+        }
+        throw new Error("The engine is busy. Please try again in a moment.");
+      }
+  
       return response;
-    } catch (error) {
-      console.error(`❌ Fetch failed for ${url}. Is your backend running?`);
-      throw error;
-    }
+    
+    } catch (error: any) {
+        // Mask network failures (like Render sleeping) as a "Connection" issue
+        throw new Error(error.message || "Connection timeout. Ensure the reaper is awake.");
+      }
   };

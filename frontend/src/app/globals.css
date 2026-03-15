@@ -279,3 +279,10 @@ body { min-height: 100vh; transition: background 0.25s, color 0.25s; }
 .link-add-inline:hover { border-color: var(--accent); color: var(--accent); }
 .expand-links { display: flex; flex-direction: column; gap: 5px; }
 
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.loading-scan {
+  animation: scan 2s linear infinite;
+}

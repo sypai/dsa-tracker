@@ -1,15 +1,32 @@
-"use client"; // This tells Next.js this component uses interactive client-side code
+"use client";
+import { useEffect } from "react";
+
+ // This tells Next.js this component uses interactive client-side code
 
 export default function Landing({ onSignIn, onSignUp }: { onSignIn: () => void, onSignUp: () => void }) {
   
-  // Theme toggle logic ported directly from your JS
+  // 1. Force dark mode on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('dsa_theme');
+    // If no preference is saved, or if preference is 'dark', apply it
+    if (!savedTheme || savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      const btn = document.getElementById('themeToggleLanding');
+      if (btn) btn.textContent = '○ Light';
+    } else {
+      document.documentElement.classList.remove('dark');
+      const btn = document.getElementById('themeToggleLanding');
+      if (btn) btn.textContent = '● Dark';
+    }
+  }, []);
+
   const toggleTheme = () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('dsa_theme', isDark ? 'light' : 'dark');
+    const isNowDark = document.documentElement.classList.toggle('dark');
+    // Save the NEW state to local storage
+    localStorage.setItem('dsa_theme', isNowDark ? 'dark' : 'light');
     
-    // Update the button text
     const btn = document.getElementById('themeToggleLanding');
-    if (btn) btn.textContent = isDark ? '○ Light' : '● Dark';
+    if (btn) btn.textContent = isNowDark ? '○ Light' : '● Dark';
   };
 
   return (

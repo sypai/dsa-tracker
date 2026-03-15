@@ -39,6 +39,9 @@ const getLocalISODate = () => {
 export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   // 1. Check local storage first! If it's not there, default to 1200.
   const [realElo, setRealElo] = useState<number>(() => {
     if (typeof window !== "undefined") {
@@ -85,8 +88,10 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
         // 2. Cache the real ELO so it doesn't flicker on the next refresh!
         localStorage.setItem("dsa_real_elo", uData.currentElo.toString());
       }
-    } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
+    } catch (err: any) {
+        setError(err.message); // This will show "Session issue" not "401 Missing Key"
+    } finally {
+        setIsLoading(false);
     }
   };
 
