@@ -39,4 +39,19 @@ public class QuestionController {
         Question savedQuestion = questionRepository.save(question);
         return ResponseEntity.ok(savedQuestion);
     }
+
+    // DELETE: Permanently remove a question
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteQuestion(@PathVariable Long id) {
+        // 1. Check if it actually exists just to be safe
+        if (!questionRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 2. Vaporize it from the database
+        questionRepository.deleteById(id);
+
+        // 3. Send a 200 OK back to React
+        return ResponseEntity.ok().build();
+    }
 }

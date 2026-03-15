@@ -174,6 +174,27 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
     }
   };
 
+  const handleDeleteQuestion = async () => {
+    if (!deleteId) return;
+
+    try {
+      // 1. Tell Spring Boot to destroy the row
+      const response = await fetch(`http://localhost:8080/api/questions/${deleteId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // 2. If the database deleted it successfully, remove it from the UI!
+        setQuestions(questions.filter(q => q.id !== deleteId));
+        setDeleteId(null); // Close the modal
+      } else {
+        console.error("Backend refused to delete:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to connect to API:", error);
+    }
+  };
+
   const updateLink = (index: number, value: string) => {
     const newLinks = [...qLinks];
     newLinks[index] = value;
@@ -470,7 +491,7 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
             <div className="modal-body">Remove <strong>{questions.find(q=>q.id===deleteId)?.name}</strong>? This will also reverse the ELO gained from it.</div>
             <div className="modal-actions">
               <button className="modal-cancel" onClick={()=>setDeleteId(null)}>Cancel</button>
-              <button className="modal-confirm" onClick={()=>{setQuestions(questions.filter(q=>q.id!==deleteId)); setDeleteId(null);}}>Delete</button>
+              <button className="modal-confirm" onClick={handleDeleteQuestion}>Delete</button>
             </div>
           </div>
         </div>
