@@ -1,5 +1,7 @@
 "use client";
 
+import { BioMonitor } from "./BioMonitor";
+import { motion } from "framer-motion";
 import { useState, useEffect, useRef, useMemo } from "react";
 
 const DEFAULT_TOPICS = ['Array','String','Linked List','Tree','Graph','DP','Backtracking','Binary Search','Heap','Stack','Sliding Window','Two Pointers','Greedy','Math','Trie','Other'];
@@ -23,6 +25,13 @@ type Question = {
   links?: string[]; 
   notes: string; 
   date: string; 
+};
+
+const getLocalISODate = () => {
+  const date = new Date();
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().split('T')[0];
 };
 
 // Change the very top of your Dashboard function to this:
@@ -101,14 +110,29 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
   const stats = useMemo(() => {
     let streak = 0;
     const solvedDays = new Set(questions.map(q => q.date));
+    const todayStr = getLocalISODate(); // Get today's local date
+
+    let checkDate = new Date();
+    checkDate.setHours(0, 0, 0, 0);
     
-    // 1. Calculate the Streak (strictly for the UI graph)
-    let d = new Date(); d.setHours(0,0,0,0);
+    // If we haven't solved today, start checking from yesterday
+    if (!solvedDays.has(todayStr)) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    // Iterate backwards and count the consecutive days
     while (true) {
-      const key = d.toISOString().slice(0,10);
-      if (solvedDays.has(key)) { streak++; d.setDate(d.getDate()-1); }
-      else if (streak === 0) { d.setDate(d.getDate()-1); if (new Date().getTime()-d.getTime() > 2*86400000) break; }
-      else break;
+      // Get the YYYY-MM-DD for the date we are currently checking
+      const offset = checkDate.getTimezoneOffset();
+      const localCheck = new Date(checkDate.getTime() - (offset * 60 * 1000));
+      const key = localCheck.toISOString().split('T')[0];
+
+      if (solvedDays.has(key)) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
     }
 
     if (!questions.length) return { elo: realElo, gained: 0, lost: 0, decayActive: false, gapDays: 0, pendingDecay: 0, streak: 0 };
@@ -128,6 +152,13 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
     
     return { elo, gained, lost, decayActive, gapDays, pendingDecay, streak };
   }, [questions, realElo]); // 👈 Added realElo to dependency array
+
+  const monitorStatus = useMemo(() => {
+    if (stats.elo <= 0 && questions.length === 0) return 'dead';
+    if (stats.decayActive) return 'decay';
+    if (stats.streak > 0) return 'alive';
+    return 'idle';
+  }, [stats.elo, stats.decayActive, stats.streak, questions.length]);
 
   const rankInfo = useMemo(() => {
     let idx = 0;
@@ -150,7 +181,7 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
       source: qSource,
       links: filteredLinks,
       notes: qNotes.trim(),
-      date: new Date().toISOString().slice(0,10),
+      date: getLocalISODate(),
       user: { id: user.id } // Use the real ID of the person logged in!
     };
 
@@ -356,40 +387,73 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
         </div>
       )}
 
-      {/* ACTIVITY */}
-      <div className="activity-block">
-        <div className="activity-header">
-          <div className="section-title !border-none !p-0 !m-0">Activity — last 120 days</div>
-          <div className="streak-inline">
-            <div className="streak-nums-row">
-              <span className="streak-inline-num">{stats.streak}</span>
-              <span className="streak-inline-label">day streak</span>
-            </div>
-            <div className="ecg-wrap"><canvas ref={canvasRef} width="60" height="22"></canvas></div>
+     {/* ACTIVITY */}
+    <div className="activity-block">
+      <div className="activity-header">
+        <div className="section-title !border-none !p-0 !m-0">Activity — last 120 days</div>
+        
+        {/* The Unified Bio-Sensor Unit */}
+        <motion.div 
+          className="streak-inline cursor-help"
+          animate={stats.decayActive ? { 
+            x: [0, -1, 1, -1, 1, 0],
+            filter: [
+              "drop-shadow(0 0 0px rgba(248,113,113,0))", 
+              "drop-shadow(0 0 12px rgba(248,113,113,0.3))", 
+              "drop-shadow(0 0 0px rgba(248,113,113,0))"
+            ]
+          } : { x: 0, filter: "drop-shadow(0 0 0px rgba(0,0,0,0))" }}
+          transition={stats.decayActive ? { 
+            x: { repeat: Infinity, duration: 0.5, ease: "linear" },
+            filter: { repeat: Infinity, duration: 2 }
+          } : {}}
+          title={stats.decayActive ? "System Critical: ELO Bleeding" : "Heartbeat Stable"}
+        >
+          <div className="streak-nums-row">
+            <span className="streak-inline-num">{stats.streak}</span>
+            <span className="streak-inline-label">day streak</span>
           </div>
-        </div>
-        <div className="h-[1px] bg-[var(--border)] mb-2.5"></div>
-        <div className="cal-grid">
-          {Array.from({length: 120}, (_, i) => {
-            const d = new Date(); d.setDate(d.getDate() - (119 - i));
-            const key = d.toISOString().slice(0,10);
-            const count = questions.filter(q => q.date === key).length;
-            const firstD = [...questions].sort((a,b)=>a.date.localeCompare(b.date))[0]?.date;
-            const isDecay = firstD && d > new Date(firstD) && count === 0 && d < new Date();
-            let lvl = count === 1 ? 'l1' : count <= 3 ? 'l2' : count <= 5 ? 'l3' : count >= 6 ? 'l4' : '';
-            return <div key={i} className={`cal-day ${count>0?lvl:isDecay?'decay':''} ${i===119?'today':''}`} title={`${key} ${count>0?count+' solved':isDecay?'-2 ELO':''}`} />
-          })}
-        </div>
-        <div className="cal-legend">
+          
+          <div className="ecg-wrap">
+            <BioMonitor status={monitorStatus} />
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="h-[1px] bg-[var(--border)] mb-2.5"></div>
+      
+      <div className="cal-grid">
+        {Array.from({length: 120}, (_, i) => {
+          const d = new Date(); d.setDate(d.getDate() - (119 - i));
+          const key = d.toISOString().slice(0,10);
+          const count = questions.filter(q => q.date === key).length;
+          
+          // Determine if this specific day on the calendar was a decay day
+          const firstD = [...questions].sort((a,b)=>a.date.localeCompare(b.date))[0]?.date;
+          const isDecay = firstD && d > new Date(firstD) && count === 0 && d < new Date();
+          
+          let lvl = count === 1 ? 'l1' : count <= 3 ? 'l2' : count <= 5 ? 'l3' : count >= 6 ? 'l4' : '';
+          
+          return (
+            <div 
+              key={i} 
+              className={`cal-day ${count > 0 ? lvl : isDecay ? 'decay' : ''} ${i === 119 ? 'today' : ''}`} 
+              title={`${key}: ${count > 0 ? count + ' solved' : isDecay ? '-2 ELO' : 'No activity'}`} 
+            />
+          );
+        })}
+      </div>
+
+      <div className="cal-legend">
         <div className="cal-legend-swatch" style={{ background: 'var(--cal-0)' }}></div> none
         <div className="cal-legend-swatch" style={{ background: 'var(--cal-1)' }}></div> 1
         <div className="cal-legend-swatch" style={{ background: 'var(--cal-2)' }}></div> 2–3
         <div className="cal-legend-swatch" style={{ background: 'var(--cal-3)' }}></div> 4–5
         <div className="cal-legend-swatch" style={{ background: 'var(--cal-4)' }}></div> 6+
         &nbsp;&nbsp;
-        <div className="cal-legend-swatch" style={{ background: 'var(--cal-decay' }}></div> decay day
-  </div>
+        <div className="cal-legend-swatch" style={{ background: 'var(--cal-decay)' }}></div> decay day
       </div>
+    </div>
 
       {/* TOPICS */}
       <div className="topics-block">
