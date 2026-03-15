@@ -297,3 +297,24 @@ body { min-height: 100vh; transition: background 0.25s, color 0.25s; }
 .loading-scan {
   animation: scan 2s linear infinite;
 }
+
+/* ── RESPONSIVE TYPOGRAPHY FOR LARGE MONITORS ── */
+
+/* Targets standard 1440p monitors and up (like your 27-inch setup) */
+@media (min-width: 1440px) {
+  html {
+    font-size: 16.5px; /* Bumps the baseline up by ~10% */
+  }
+  
+  /* Optional: Slightly thicken the font weight on large screens to counter backlight bleed */
+  body {
+    font-weight: 500; 
+  }
+}
+
+/* Targets ultra-wides or 4K monitors */
+@media (min-width: 1920px) {
+  html {
+    font-size: 18px; /* Bumps the baseline up by 20% */
+  }
+}
