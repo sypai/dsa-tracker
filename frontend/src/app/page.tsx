@@ -9,37 +9,63 @@ const SyncOverlay = () => {
   const [showLongWaitMessage, setShowLongWaitMessage] = useState(false);
 
   useEffect(() => {
+    // Render's free tier can take a bit to wake up. This keeps the user informed.
     const timer = setTimeout(() => setShowLongWaitMessage(true), 5000);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md">
-    <div className="flex flex-col items-center gap-6">
-      {/* Bio-Pulse Spinner */}
-      <div className="relative h-16 w-16">
-        <div className="absolute inset-0 rounded-full border-4 border-green-500/20" />
-        <div className="absolute inset-0 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        <p className="font-mono text-sm tracking-[0.3em] text-green-500 animate-pulse uppercase">
+    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <style>{`
+        @keyframes engine-scan {
+          0% { left: -50%; }
+          100% { left: 100%; }
+        }
+        .animate-engine-scan {
+          animation: engine-scan 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        .data-block {
+          animation: pulse-block 1s infinite alternate;
+        }
+        @keyframes pulse-block {
+          0% { opacity: 0.2; transform: scaleY(0.8); }
+          100% { opacity: 1; transform: scaleY(1.1); }
+        }
+      `}</style>
+      
+      <div className="relative w-full max-w-[320px] p-8 bg-[var(--surface)] border border-[var(--border2)] shadow-2xl flex flex-col items-center text-center">
+        
+        {/* The Scanning Accent Line (matches AuthModal) */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--border2)] overflow-hidden">
+          <div className="absolute top-0 bottom-0 w-[50%] bg-[var(--text)] animate-engine-scan" />
+        </div>
+
+        {/* Text Details */}
+        <div className="font-mono text-[var(--text)] text-sm uppercase tracking-widest mb-1 mt-2">
           Syncing Engine
-        </p>
-        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-          Establishing Secure Handshake...
-        </p>
+        </div>
+        <div className="font-mono text-[var(--muted)] text-[10px] uppercase tracking-widest mb-6">
+          Establishing Handshake...
+        </div>
+
+        {/* Raw Data-Block Loader */}
+        <div className="flex gap-2">
+          <div className="w-2 h-4 bg-[var(--text)] data-block" style={{ animationDelay: '0ms' }} />
+          <div className="w-2 h-4 bg-[var(--text)] data-block" style={{ animationDelay: '200ms' }} />
+          <div className="w-2 h-4 bg-[var(--text)] data-block" style={{ animationDelay: '400ms' }} />
+        </div>
+
+        {/* Cold Start Warning */}
+        {showLongWaitMessage && (
+          <div className="mt-8 pt-4 border-t border-[var(--border2)] w-full">
+            <p className="font-mono text-[10px] text-[var(--accent)] uppercase tracking-widest animate-pulse">
+              Cold start detected.<br/>Waking the Reaper...
+            </p>
+          </div>
+        )}
       </div>
     </div>
-
-    {showLongWaitMessage && (
-         <p className="mt-8 text-[9px] font-mono text-slate-500 uppercase tracking-widest animate-fade-in text-center px-10">
-           Render cold start detected. <br/> 
-           The Reaper is waking up... hang tight.
-         </p>
-       )}
-  </div>
   );
-  
 };
 
 export default function Home() {
