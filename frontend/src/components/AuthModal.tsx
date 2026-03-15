@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { dsaFetch } from "@/lib/api";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -44,12 +45,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = "signin", onS
     }
     
     // 1. Define the endpoint and payload based on the current mode
-    const endpoint = isSignup ? '/api/users/register' : '/api/users/login';
+    const endpoint = isSignup ? '/users/register' : '/users/login';
     const payload = isSignup ? { name, email, password } : { email, password };
 
     try {
       // 2. Fire the request to your Spring Boot backend
-      const response = await fetch(`http://localhost:8080${endpoint}`, {
+      const response = await dsaFetch(`${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

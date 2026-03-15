@@ -5,11 +5,11 @@ export default function Landing({ onSignIn, onSignUp }: { onSignIn: () => void, 
   // Theme toggle logic ported directly from your JS
   const toggleTheme = () => {
     const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('dsa_theme', isDark ? 'dark' : 'light');
+    localStorage.setItem('dsa_theme', isDark ? 'light' : 'dark');
     
     // Update the button text
     const btn = document.getElementById('themeToggleLanding');
-    if (btn) btn.textContent = isDark ? '● Dark' : '○ Light';
+    if (btn) btn.textContent = isDark ? '○ Light' : '● Dark';
   };
 
   return (
