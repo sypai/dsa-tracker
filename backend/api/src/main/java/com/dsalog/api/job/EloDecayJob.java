@@ -19,7 +19,7 @@ public class EloDecayJob {
 
     // Cron syntax: Seconds, Minutes, Hours, Day of month, Month, Day of week
     // "0 0 0 * * ?" = Run exactly at 00:00:00 (Midnight) every single day
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Kolkata")
     // @Scheduled(fixedRate = 10000) // Runs every 10 seconds
     public void executeMidnightDecay() {
         System.out.println("The Reaper has awoken. Checking for broken streaks...");
