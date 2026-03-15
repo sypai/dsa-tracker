@@ -31,6 +31,10 @@ public class ApiKeyFilter implements Filter {
         if (apiSecret != null && apiSecret.equals(requestKey)) {
             chain.doFilter(request, response);
         } else {
+            res.setHeader("Access-Control-Allow-Origin", req.getHeader("Origin"));
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-API-KEY, Authorization");
+            res.setHeader("Access-Control-Allow-Credentials", "true");
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.getWriter().write("Invalid or Missing API Key");
         }
