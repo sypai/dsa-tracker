@@ -54,6 +54,11 @@ public class QuestionController {
 
         // 3. Update the user's total ELO and save it
         user.setCurrentElo(user.getCurrentElo() + eloGain);
+
+        if (!user.isHasStartedGrinding()) {
+            user.setHasStartedGrinding(true);
+        }
+
         userRepository.save(user);
 
         // 4. Finally, save the question itself

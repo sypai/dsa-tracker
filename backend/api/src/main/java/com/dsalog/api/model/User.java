@@ -24,6 +24,9 @@ public class User {
 
     private Integer currentElo = 1200;
 
+    @Column(name = "has_started_grinding")
+    private boolean hasStartedGrinding = false;
+
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

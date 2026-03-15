@@ -32,17 +32,14 @@ public class EloDecayJob {
         List<User> allUsers = userRepository.findAll();
 
         for (User user : allUsers) {
-            // 1. Check if they have even started grinding yet
-            long totalSolved = questionRepository.countByUserId(user.getId());
+            // THE NEW RULE: Once you start, the Reaper never stops hunting you.
+            if (user.isHasStartedGrinding()) {
 
-            if (totalSolved > 0) {
-                // 2. Check if they solved anything yesterday
                 boolean solvedYesterday = questionRepository.existsByUserIdAndDate(user.getId(), yesterday);
 
                 if (!solvedYesterday) {
-                    // 3. Streak broken! Bleed 2 points.
                     int currentElo = user.getCurrentElo();
-                    int newElo = Math.max(0, currentElo - 2); // Floor at 0
+                    int newElo = Math.max(0, currentElo - 2);
 
                     user.setCurrentElo(newElo);
                     userRepository.save(user);
