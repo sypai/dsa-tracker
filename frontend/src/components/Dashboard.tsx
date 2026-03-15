@@ -3,6 +3,7 @@
 import { BioMonitor } from "./BioMonitor";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { dsaFetch } from "@/lib/api";
 
 const DEFAULT_TOPICS = ['Array','String','Linked List','Tree','Graph','DP','Backtracking','Binary Search','Heap','Stack','Sliding Window','Two Pointers','Greedy','Math','Trie','Other'];
 const RANKS = [
@@ -72,11 +73,11 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
     if (!user || !user.id) return;
     try {
       // Fetch Questions
-      const qRes = await fetch(`http://localhost:8080/api/questions/user/${user.id}`);
+      const qRes = await dsaFetch(`/questions/user/${user.id}`);
       if (qRes.ok) setQuestions(await qRes.json());
 
       // Fetch Fresh User ELO
-      const uRes = await fetch(`http://localhost:8080/api/users/${user.id}`);
+      const uRes = await dsaFetch(`/users/${user.id}`);
       if (uRes.ok) {
         const uData = await uRes.json();
         setRealElo(uData.currentElo);
@@ -187,7 +188,7 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
 
     try {
       // 3. Send it to the backend
-      const response = await fetch("http://localhost:8080/api/questions", {
+      const response = await dsaFetch("/questions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -222,7 +223,7 @@ export default function Dashboard({ user, onSignOut }: { user: any, onSignOut: (
 
     try {
       // 1. Tell Spring Boot to destroy the row
-      const response = await fetch(`http://localhost:8080/api/questions/${deleteId}`, {
+      const response = await dsaFetch(`/questions/${deleteId}`, {
         method: "DELETE",
       });
 
