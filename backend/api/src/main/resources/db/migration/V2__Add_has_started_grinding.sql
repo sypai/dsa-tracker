@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN has_started_grinding BOOLEAN DEFAULT FALSE;

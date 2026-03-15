@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255),
+    password VARCHAR(255),
+    current_elo INTEGER DEFAULT 1200,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS questions (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    diff VARCHAR(50),
+    topic VARCHAR(100),
+    source VARCHAR(100),
+    notes TEXT,
+    date DATE,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS question_links (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    link VARCHAR(1024)
+);
