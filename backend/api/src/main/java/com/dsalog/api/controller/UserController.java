@@ -12,7 +12,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Allow Next.js to talk to this
 public class UserController {
 
     private final UserRepository userRepository;

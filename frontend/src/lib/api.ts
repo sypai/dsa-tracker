@@ -1,30 +1,29 @@
 // src/lib/api.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const API_KEY = process.env.NEXT_PUBLIC_API_SECRET;
-
 export const dsaFetch = async (endpoint: string, options: RequestInit = {}) => {
-  // 1. Construct the full URL
-  const url = `${BASE_URL}${endpoint}`;
-
-  // 2. Inject the "Secret Handshake" headers
-  const headers = {
-    "X-API-KEY": API_KEY || "",
-    "Content-Type": "application/json",
-    ...options.headers, // Allow individual calls to override headers if needed
-  };
-
-  try {
-    const response = await fetch(url, { ...options, headers });
-
-    // 3. Handle unauthorized or server errors globally
-    if (response.status === 401) {
-        console.error("🚨 API Key Rejected. Check your environment variables!");
+    const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const API_KEY = process.env.NEXT_PUBLIC_API_SECRET;
+  
+    // 🚨 DIAGNOSTIC: If this logs "undefined", your .env file isn't being read!
+    console.log("DEBUG: Calling URL ->", `${BASE_URL}${endpoint}`);
+  
+    if (!BASE_URL) {
+      throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined. Check your .env file!");
     }
-
-    return response;
-  } catch (error) {
-    console.error(`❌ Network error hitting ${url}:`, error);
-    throw error;
-  }
-};
+  
+    const url = `${BASE_URL}${endpoint}`;
+  
+    const headers = {
+      "X-API-KEY": API_KEY || "",
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+  
+    try {
+      const response = await fetch(url, { ...options, headers });
+      return response;
+    } catch (error) {
+      console.error(`❌ Fetch failed for ${url}. Is your backend running?`);
+      throw error;
+    }
+  };

@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/questions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Allows your Next.js frontend to talk to this API
 public class QuestionController {
 
     private final QuestionRepository questionRepository;
