@@ -66,13 +66,13 @@ public class EloService {
         // Return points based on the difficulty of the question
         switch (difficulty.toLowerCase()) {
             case "easy":
-                return 3;
+                return 5;
             case "medium":
-                return 7;
-            case "hard":
                 return 15;
+            case "hard":
+                return 25;
             default:
-                return 3;
+                return 0;
         }
     }
 }
