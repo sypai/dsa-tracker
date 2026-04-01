@@ -37,11 +37,11 @@ public class EloService {
 
         if (daysMissed > 0) {
             for (int i = 1; i <= daysMissed; i++) {
+                // Keep it as a LocalDate
                 LocalDate dateToCheck = lastDecay.plusDays(i);
-                String dateStr = dateToCheck.toString(); // e.g., "2026-04-01"
 
-                // Did the user solve a question on this specific missed day?
-                boolean solvedThatDay = questionRepository.existsByUserIdAndDate(user.getId(), dateStr);
+                // Pass the LocalDate object directly!
+                boolean solvedThatDay = questionRepository.existsByUserIdAndDate(user.getId(), dateToCheck);
 
                 if (!solvedThatDay) {
                     int currentElo = user.getCurrentElo() != null ? user.getCurrentElo() : 1200;
