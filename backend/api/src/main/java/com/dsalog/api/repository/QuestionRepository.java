@@ -18,4 +18,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     // 2. Did they solve a question on a specific date?
     boolean existsByUserIdAndDate(Long userId, LocalDate date);
+
+    boolean existsByUserIdAndDate(Long userId, String date);
 }

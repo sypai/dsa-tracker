@@ -2,6 +2,8 @@ package com.dsalog.api.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,5 +47,17 @@ public class User {
 
     public void setCustomTopics(List<String> customTopics) {
         this.customTopics = customTopics;
+    }
+
+    // Inside your User class:
+    @Column(name = "last_decay_date")
+    private LocalDate lastDecayDate;
+
+    public LocalDate getLastDecayDate() {
+        return lastDecayDate;
+    }
+
+    public void setLastDecayDate(LocalDate lastDecayDate) {
+        this.lastDecayDate = lastDecayDate;
     }
 }

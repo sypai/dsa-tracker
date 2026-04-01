@@ -2,6 +2,8 @@ package com.dsalog.api.controller;
 
 import com.dsalog.api.model.User;
 import com.dsalog.api.repository.UserRepository;
+import com.dsalog.api.service.EloService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +19,18 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    // FIX 1: Tell Spring to inject EloService here so the red line goes away
+    private final EloService eloService;
+
     // POST: Register a new user
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
-        // 1. Check if email already exists
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
         if (existingUser.isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is already taken.");
         }
 
-        // 2. Set default values and save
-        user.setCurrentElo(1200); // Everyone starts at 1200 ELO!
+        user.setCurrentElo(1200);
         // TODO: Hash the password later!
 
         User savedUser = userRepository.save(user);
@@ -37,7 +40,6 @@ public class UserController {
     // POST: Login an existing user
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User loginRequest) {
-        // 1. Find user by email
         Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
 
         if (userOpt.isEmpty()) {
@@ -46,26 +48,29 @@ public class UserController {
 
         User user = userOpt.get();
 
-        // 2. Check password (Plain text for now)
         if (!user.getPassword().equals(loginRequest.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password.");
         }
 
-        // 3. Success! Return the user data to the frontend
-        return ResponseEntity.ok(user);
+        // BONUS FIX: Reconcile decay immediately upon login so the math is always
+        // perfect
+        User reconciledUser = eloService.reconcileDecay(user);
+
+        return ResponseEntity.ok(reconciledUser);
     }
 
-    // GET: Fetch the latest user data (including their true ELO)
+    // GET: Fetch the latest user data (FIX 2: The duplicate is removed, only the
+    // correct one remains)
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable Long id) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isPresent()) {
-            return ResponseEntity.ok(userOpt.get());
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<User> getUser(@PathVariable Long id) {
+        return userRepository.findById(id).map(user -> {
+            // Force state reconciliation before returning the user!
+            User reconciledUser = eloService.reconcileDecay(user);
+            return ResponseEntity.ok(reconciledUser);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
-    // Add this new endpoint
+    // PUT: Update custom topics
     @PutMapping("/{id}/topics")
     public ResponseEntity<User> updateTopics(@PathVariable Long id, @RequestBody List<String> topics) {
         return userRepository.findById(id).map(user -> {
