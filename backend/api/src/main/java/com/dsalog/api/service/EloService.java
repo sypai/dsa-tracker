@@ -25,22 +25,22 @@ public class EloService {
     @Transactional
     public User reconcileDecay(User user) {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        LocalDate yesterday = today.minusDays(1);
         LocalDate lastDecay = user.getLastDecayDate();
 
         // Baseline for first-time execution
         if (lastDecay == null) {
-            user.setLastDecayDate(today);
+            user.setLastDecayDate(today); // Start the clock today. No penalties yet.
             return userRepository.save(user);
         }
 
-        long daysMissed = ChronoUnit.DAYS.between(lastDecay, today);
+        // ONLY evaluate days that have fully finished
+        long daysToEvaluate = ChronoUnit.DAYS.between(lastDecay, yesterday);
 
-        if (daysMissed > 0) {
-            for (int i = 1; i <= daysMissed; i++) {
-                // Keep it as a LocalDate
+        if (daysToEvaluate > 0) {
+            for (int i = 1; i <= daysToEvaluate; i++) {
                 LocalDate dateToCheck = lastDecay.plusDays(i);
 
-                // Pass the LocalDate object directly!
                 boolean solvedThatDay = questionRepository.existsByUserIdAndDate(user.getId(), dateToCheck);
 
                 if (!solvedThatDay) {
@@ -48,8 +48,8 @@ public class EloService {
                     user.setCurrentElo(Math.max(0, currentElo - 2)); // The Bleed
                 }
             }
-            // Fast-forward the decay tracker to today
-            user.setLastDecayDate(today);
+            // Move the cursor to the last fully completed day
+            user.setLastDecayDate(yesterday);
             return userRepository.save(user);
         }
 
